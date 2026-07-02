@@ -5,65 +5,76 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use App\Models\User;
+use App\Models\Product;
+use Illuminate\Support\Str;
 
 class OrderSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $budi = User::where('email', 'budi@email.com')->first();
-        $sari = User::where('email', 'sari@email.com')->first();
+        $users = User::all();
         $products = Product::all();
 
-        $ordersData = [
-            ['user' => $budi, 'items' => [0, 2], 'qtys' => [1, 2], 'status' => 'selesai', 'days' => 90, 'payment' => 'bca'],
-            ['user' => $budi, 'items' => [4, 5], 'qtys' => [3, 1], 'status' => 'selesai', 'days' => 75, 'payment' => 'mandiri'],
-            ['user' => $sari, 'items' => [12], 'qtys' => [1], 'status' => 'selesai', 'days' => 60, 'payment' => 'bca'],
-            ['user' => $budi, 'items' => [1, 8], 'qtys' => [1, 2], 'status' => 'selesai', 'days' => 50, 'payment' => 'bri'],
-            ['user' => $sari, 'items' => [9, 10], 'qtys' => [5, 3], 'status' => 'dikirim', 'days' => 35, 'payment' => 'gopay'],
-            ['user' => $budi, 'items' => [3, 6], 'qtys' => [1, 1], 'status' => 'dikirim', 'days' => 25, 'payment' => 'ovo'],
-            ['user' => $sari, 'items' => [14, 15], 'qtys' => [1, 2], 'status' => 'dibayar', 'days' => 15, 'payment' => 'dana'],
-            ['user' => $budi, 'items' => [7, 11], 'qtys' => [1, 4], 'status' => 'dibayar', 'days' => 10, 'payment' => 'bca'],
-            ['user' => $sari, 'items' => [0, 13], 'qtys' => [2, 1], 'status' => 'pending', 'days' => 3, 'payment' => 'mandiri'],
-            ['user' => $budi, 'items' => [15], 'qtys' => [1], 'status' => 'pending', 'days' => 1, 'payment' => 'gopay'],
-        ];
+        foreach ($users as $user) {
 
-        foreach ($ordersData as $data) {
-            $total = 0;
-            $orderItems = [];
+            // bikin 1–3 order per user
+            for ($i = 0; $i < rand(1, 3); $i++) {
 
-            foreach ($data['items'] as $idx => $productIdx) {
-                $product = $products[$productIdx];
-                $qty = $data['qtys'][$idx];
-                $total += $product->price * $qty;
-                $orderItems[] = [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'product_price' => $product->price,
-                    'product_image' => $product->image,
-                    'quantity' => $qty,
-                ];
-            }
+                $orderNumber = 'ORD-' . strtoupper(Str::random(10));
 
-            $order = Order::create([
-                'user_id' => $data['user']->id,
-                'order_number' => 'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-                'total' => $total,
-                'status' => $data['status'],
-                'payment_method' => $data['payment'],
-                'shipping_name' => $data['user']->name,
-                'shipping_phone' => $data['user']->phone,
-                'shipping_city' => 'Surabaya',
-                'shipping_address' => 'Jl. Raya Darmo No. ' . rand(10, 200),
-                'shipping_postal' => '602' . rand(10, 99),
-                'created_at' => now()->subDays($data['days']),
-                'updated_at' => now()->subDays($data['days']),
-            ]);
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'order_number' => $orderNumber,
+                    'status' => $this->randomStatus(),
+                    'total_amount' => 0, // sementara
+                    'shipping_address' => 'Jl. Contoh No. ' . rand(1, 100),
+                    'notes' => rand(0, 1) ? 'Tolong kirim cepat ya' : null,
+                    'ordered_at' => now()->subDays(rand(1, 30))
+                ]);
 
-            foreach ($orderItems as $item) {
-                $order->items()->create($item);
+                $totalAmount = 0;
+
+                // tiap order isi 1–4 product
+                $orderProducts = $products->random(rand(1, 4));
+
+                foreach ($orderProducts as $product) {
+
+                    $qty = rand(1, 3);
+                    $subtotal = $product->price * $qty;
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'product_price' => $product->price,
+                        'product_image' => $product->image,
+                        'quantity' => $qty,
+                        'subtotal' => $subtotal
+                    ]);
+
+                    $totalAmount += $subtotal;
+                }
+
+                // update total order
+                $order->update([
+                    'total_amount' => $totalAmount
+                ]);
             }
         }
+    }
+
+    private function randomStatus(): string
+    {
+        $statuses = [
+            'pending',
+            'paid',
+            'processing',
+            'shipped',
+            'completed',
+            'cancelled'
+        ];
+
+        return $statuses[array_rand($statuses)];
     }
 }

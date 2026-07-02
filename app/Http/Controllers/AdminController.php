@@ -13,10 +13,10 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalRevenue = Order::where('status', '!=', 'pending')->sum('total');
+        $totalRevenue = Order::where('status', '!=', 'pending')->sum('total_amount');
         $totalOrders = Order::count();
         $totalProducts = Product::count();
-        $totalUsers = User::where('role', 'user')->count();
+        $totalUsers = User::where('role', 'customer')->count();
 
         // Bulanan
         $monthlyLabels = [];
@@ -27,7 +27,7 @@ class AdminController extends Controller
             $monthlyValues[] = Order::whereMonth('created_at', $date->month)
                 ->whereYear('created_at', $date->year)
                 ->where('status', '!=', 'pending')
-                ->sum('total');
+                ->sum('total_amount');
         }
 
         // Tahunan
@@ -38,7 +38,7 @@ class AdminController extends Controller
             $yearlyLabels[] = (string) $year;
             $yearlyValues[] = Order::whereYear('created_at', $year)
                 ->where('status', '!=', 'pending')
-                ->sum('total');
+                ->sum('total_amount');
         }
 
         // Kategori

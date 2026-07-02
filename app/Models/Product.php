@@ -10,8 +10,29 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category_id', 'name', 'slug', 'description', 'price', 'stock', 'image',
+        'category_id',
+        'name',
+        'slug',
+        'description',
+        'price',
+        'stock',
+        'image',
+        'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
 
     public function category()
     {
@@ -23,8 +44,40 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    public function recommendations()
+    {
+        return $this->hasMany(
+            ProductRecommendation::class,
+            'product_id'
+        );
+    }
+
+    public function recommendedBy()
+    {
+        return $this->hasMany(
+            ProductRecommendation::class,
+            'recommended_product_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
     public function getFormattedPriceAttribute()
     {
-        return 'Rp ' . number_format($this->price, 0, ',', '.');
+        return 'Rp ' . number_format(
+            $this->price,
+            0,
+            ',',
+            '.'
+        );
     }
 }

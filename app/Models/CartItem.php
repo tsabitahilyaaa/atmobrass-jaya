@@ -5,27 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderItem extends Model
+class CartItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'order_id',
+        'cart_id',
         'product_id',
-        'product_name',
-        'product_price',
-        'product_image',
         'quantity',
-        'subtotal',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'product_price' => 'decimal:2',
-            'subtotal' => 'decimal:2',
-        ];
-    }
 
     /*
     |--------------------------------------------------------------------------
@@ -33,9 +21,9 @@ class OrderItem extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function order()
+    public function cart()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Cart::class);
     }
 
     public function product()
@@ -49,20 +37,15 @@ class OrderItem extends Model
     |--------------------------------------------------------------------------
     */
 
+    public function getSubtotalAttribute()
+    {
+        return $this->product->price * $this->quantity;
+    }
+
     public function getFormattedSubtotalAttribute()
     {
         return 'Rp ' . number_format(
             $this->subtotal,
-            0,
-            ',',
-            '.'
-        );
-    }
-
-    public function getFormattedPriceAttribute()
-    {
-        return 'Rp ' . number_format(
-            $this->product_price,
             0,
             ',',
             '.'

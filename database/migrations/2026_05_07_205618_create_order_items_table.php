@@ -9,13 +9,28 @@ return new class extends Migration
     public function up()
     {
         Schema::create('order_items', function (Blueprint $table) {
+
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+
+            $table->foreignId('order_id')
+                  ->constrained()
+                  ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                  ->nullable()
+                  ->constrained()
+                  ->nullOnDelete();
+
             $table->string('product_name');
-            $table->unsignedBigInteger('product_price');
-            $table->string('product_image');
+
+            $table->decimal('product_price', 12, 2);
+
+            $table->string('product_image')->nullable();
+
             $table->integer('quantity');
+
+            $table->decimal('subtotal', 12, 2);
+
             $table->timestamps();
         });
     }

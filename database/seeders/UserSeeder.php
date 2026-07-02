@@ -4,33 +4,47 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
+        // 🔥 ADMIN (untuk dashboard)
         User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('admin123'),
+            'name' => 'Admin Toko',
+            'email' => 'admin@toko.com',
+            'password' => Hash::make('password'),
             'role' => 'admin',
-            'phone' => '081234567890',
+            'email_verified_at' => now(),
         ]);
 
+        // 🔥 CUSTOMER DEFAULT
         User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi@email.com',
-            'password' => bcrypt('budi123'),
-            'role' => 'user',
-            'phone' => '081298765432',
+            'name' => 'Bita Customer',
+            'email' => 'customer@toko.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+            'email_verified_at' => now(),
         ]);
 
-        User::create([
-            'name' => 'Sari Dewi',
-            'email' => 'sari@email.com',
-            'password' => bcrypt('sari123'),
-            'role' => 'user',
-            'phone' => '081355566677',
-        ]);
+        // 🔥 DATA CUSTOMER RANDOM (untuk testing order)
+        $customers = [
+            ['name' => 'Andi Pratama', 'email' => 'andi@mail.com'],
+            ['name' => 'Siti Aisyah', 'email' => 'siti@mail.com'],
+            ['name' => 'Rizky Firmansyah', 'email' => 'rizky@mail.com'],
+            ['name' => 'Dewi Lestari', 'email' => 'dewi@mail.com'],
+            ['name' => 'Ahmad Fauzi', 'email' => 'ahmad@mail.com'],
+        ];
+
+        foreach ($customers as $c) {
+            User::create([
+                'name' => $c['name'],
+                'email' => $c['email'],
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'email_verified_at' => now(),
+            ]);
+        }
     }
 }

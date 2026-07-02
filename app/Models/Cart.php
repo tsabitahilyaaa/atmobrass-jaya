@@ -5,27 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Order extends Model
+class Cart extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'order_number',
-        'status',
-        'total_amount',
-        'shipping_address',
-        'notes',
-        'ordered_at',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'total_amount' => 'decimal:2',
-            'ordered_at' => 'datetime',
-        ];
-    }
 
     /*
     |--------------------------------------------------------------------------
@@ -40,7 +26,7 @@ class Order extends Model
 
     public function items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(CartItem::class);
     }
 
     /*
@@ -49,7 +35,14 @@ class Order extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function getFormattedTotalAttribute()
+    public function getTotalAmountAttribute()
+    {
+        return $this->items->sum(function ($item) {
+            return $item->subtotal;
+        });
+    }
+
+    public function getFormattedTotalAmountAttribute()
     {
         return 'Rp ' . number_format(
             $this->total_amount,
@@ -57,12 +50,5 @@ class Order extends Model
             ',',
             '.'
         );
-    }
-
-    public function getFormattedDateAttribute()
-    {
-        return $this->ordered_at
-            ? $this->ordered_at->locale('id_ID')->translatedFormat('d F Y, H:i')
-            : null;
     }
 }

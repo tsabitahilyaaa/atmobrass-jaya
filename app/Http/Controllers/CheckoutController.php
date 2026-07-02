@@ -44,7 +44,8 @@ class CheckoutController extends Controller
     public function process(Request $request)
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $request->validate([
@@ -57,35 +58,59 @@ class CheckoutController extends Controller
         ]);
 
         $cart = session()->get('cart', []);
+
         if (empty($cart)) {
-            return redirect()->route('cart.index')->with('error', 'Keranjang kosong.');
+            return redirect()->route('cart.index')
+                ->with('error', 'Keranjang kosong.');
         }
 
         $total = 0;
 
         foreach ($cart as $id => $qty) {
+
             $product = Product::find($id);
+
             if (!$product || $product->stock < $qty) {
-                return back()->with('error', 'Stok produk ' . ($product ? $product->name : '') . ' tidak mencukupi.');
+                return back()->with(
+                    'error',
+                    'Stok produk ' .
+                    ($product ? $product->name : '') .
+                    ' tidak mencukupi.'
+                );
             }
+
             $total += $product->price * $qty;
         }
 
         $order = Order::create([
             'user_id' => auth()->id(),
-            'order_number' => 'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-            'total' => $total,
+
+            'order_number' =>
+                'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
+
             'status' => 'pending',
-            'payment_method' => $request->input('payment'),
-            'shipping_name' => $request->input('name'),
-            'shipping_phone' => $request->input('phone'),
-            'shipping_city' => $request->input('city'),
-            'shipping_address' => $request->input('address'),
-            'shipping_postal' => $request->input('postal'),
+
+            'total_amount' => $total,
+
+            'shipping_address' =>
+                $request->name . "\n" .
+                $request->phone . "\n" .
+                $request->city . "\n" .
+                $request->address . "\n" .
+                $request->postal,
+
+            'notes' =>
+                'Metode pembayaran: ' . $request->payment,
+
+            'ordered_at' => now(),
         ]);
 
         foreach ($cart as $id => $qty) {
+
             $product = Product::find($id);
+
+            $subtotal = $product->price * $qty;
+
             $product->decrement('stock', $qty);
 
             $order->items()->create([
@@ -94,11 +119,17 @@ class CheckoutController extends Controller
                 'product_price' => $product->price,
                 'product_image' => $product->image,
                 'quantity' => $qty,
+                'subtotal' => $subtotal,
             ]);
         }
 
         session()->forget('cart');
 
-        return redirect()->route('orders.index')->with('success', 'Pesanan berhasil dibuat! Nomor: ' . $order->order_number);
+        return redirect()
+            ->route('orders.index')
+            ->with(
+                'success',
+                'Pesanan berhasil dibuat! Nomor: ' . $order->order_number
+            );
     }
-}
+}   

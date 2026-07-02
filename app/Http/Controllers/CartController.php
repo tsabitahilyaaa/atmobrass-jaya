@@ -10,26 +10,41 @@ class CartController extends Controller
     public function index()
     {
         $cart = session()->get('cart', []);
+
         $total = 0;
         $cartItems = [];
 
         foreach ($cart as $id => $qty) {
+
             $product = Product::find($id);
+
             if ($product) {
+
+                $subtotal = $product->price * $qty;
+
                 $cartItems[] = (object) [
                     'id' => $product->id,
                     'name' => $product->name,
                     'price' => $product->price,
+                    'formatted_price' => 'Rp ' . number_format($product->price, 0, ',', '.'),
                     'image' => $product->image,
                     'stock' => $product->stock,
                     'qty' => $qty,
-                    'subtotal' => $product->price * $qty,
+                    'subtotal' => $subtotal,
+                    'formatted_subtotal' => 'Rp ' . number_format($subtotal, 0, ',', '.'),
                 ];
-                $total += $product->price * $qty;
+
+                $total += $subtotal;
             }
         }
 
-        return view('cart.index', compact('cartItems', 'total'));
+        $formattedTotal = 'Rp ' . number_format($total, 0, ',', '.');
+
+        return view('cart.index', compact(
+            'cartItems',
+            'total',
+            'formattedTotal'
+        ));
     }
 
     public function add(Request $request)
@@ -39,50 +54,94 @@ class CartController extends Controller
             'qty' => 'required|integer|min:1',
         ]);
 
-        $productId = $request->input('product_id');
-        $qty = $request->input('qty');
-        $product = Product::find($productId);
-
-        if ($product->stock < $qty) {
-            return back()->with('error', 'Stok tidak mencukupi. Tersedia: ' . $product->stock);
-        }
+        $product = Product::findOrFail($request->product_id);
 
         $cart = session()->get('cart', []);
-        $cart[$productId] = isset($cart[$productId]) ? $cart[$productId] + $qty : $qty;
+
+        if (isset($cart[$product->id])) {
+            $cart[$product->id] += $request->qty;
+        } else {
+            $cart[$product->id] = $request->qty;
+        }
+
         session()->put('cart', $cart);
 
-        return back()->with('success', $product->name . ' ditambahkan ke keranjang.');
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Produk berhasil ditambahkan ke keranjang.');
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required',
             'qty' => 'required|integer|min:1',
         ]);
 
-        $productId = $request->input('product_id');
-        $qty = $request->input('qty');
-        $product = Product::find($productId);
+        $cart = session()->get('cart', []);
 
-        if ($product->stock < $qty) {
-            return back()->with('error', 'Stok tidak mencukupi.');
+        if (isset($cart[$request->product_id])) {
+            $cart[$request->product_id] = $request->qty;
         }
 
-        $cart = session()->get('cart', []);
-        $cart[$productId] = $qty;
         session()->put('cart', $cart);
 
-        return back()->with('success', 'Keranjang diperbarui.');
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Jumlah produk berhasil diperbarui.');
     }
 
     public function remove(Request $request)
     {
-        $request->validate(['product_id' => 'required|exists:products,id']);
         $cart = session()->get('cart', []);
-        unset($cart[$request->input('product_id')]);
+
+        if (isset($cart[$request->product_id])) {
+            unset($cart[$request->product_id]);
+        }
+
         session()->put('cart', $cart);
 
-        return back()->with('success', 'Produk dihapus dari keranjang.');
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Produk berhasil dihapus dari keranjang.');
+    }
+    public function increase(Request $request)
+    {
+        $productId = $request->product_id;
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$productId])) {
+
+            $product = Product::find($productId);
+
+            if ($cart[$productId] < $product->stock) {
+                $cart[$productId]++;
+            }
+
+            session()->put('cart', $cart);
+        }
+
+        return back();
+    }
+
+    public function decrease(Request $request)
+    {
+        $productId = $request->product_id;
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$productId])) {
+
+            $cart[$productId]--;
+
+            if ($cart[$productId] <= 0) {
+                unset($cart[$productId]);
+            }
+
+            session()->put('cart', $cart);
+        }
+
+        return back();
     }
 }

@@ -28,6 +28,8 @@ Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/keranjang/tambah', [CartController::class, 'add'])->name('cart.add');
 Route::post('/keranjang/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/keranjang/hapus', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/keranjang/tambah-qty', [CartController::class, 'increase'])->name('cart.increase');
+Route::post('/keranjang/kurang-qty', [CartController::class, 'decrease'])->name('cart.decrease');
 
 // Checkout
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
