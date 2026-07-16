@@ -17,7 +17,7 @@
 @else
     <div class="space-y-4">
         @foreach($orders as $order)
-        <div class="bg-dark-100 border border-dark-300 rounded-xl p-5">
+        <a href="{{ route('admin.orders.show', $order->id) }}" class="block bg-dark-100 border border-dark-300 rounded-xl p-5 hover:shadow-lg transition-shadow">
             <div class="flex flex-wrap justify-between items-start gap-3 mb-3">
                 <div>
                     <p class="text-xs text-muted">{{ $order->order_number }} — {{ $order->formatted_date }}</p>
@@ -49,7 +49,7 @@
                 <span><i class="fas fa-phone mr-1 text-gold"></i>{{ $order->shipping_phone }}</span>
                 <span><i class="fas fa-credit-card mr-1 text-gold"></i>{{ strtoupper($order->payment_method) }}</span>
             </div>
-        </div>
+        </a>
         @endforeach
     </div>
 

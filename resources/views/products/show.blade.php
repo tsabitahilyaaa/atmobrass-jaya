@@ -16,7 +16,7 @@
 
     <div class="grid md:grid-cols-2 gap-8 sm:gap-12 mb-16">
         <div class="rounded-xl overflow-hidden border border-dark-300 aspect-square bg-dark-200">
-            <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
         </div>
 
         <div>
@@ -34,13 +34,26 @@
             </div>
 
             @if($product->stock > 0)
-                <form method="POST" action="{{ route('cart.add') }}" class="flex items-center gap-4 mb-6">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <label class="text-sm text-muted">Jumlah:</label>
-                    <input type="number" name="qty" value="1" min="1" max="{{ $product->stock }}" class="input-dark w-24 px-3 py-2.5 rounded-lg text-sm text-center">
-                    <button type="submit" class="btn-gold px-8 py-3 rounded-lg text-sm flex-1 sm:flex-none"><i class="fas fa-shopping-bag mr-2"></i>Tambah ke Keranjang</button>
-                </form>
+                <div class="mb-6">
+                    <form method="POST" action="{{ route('order.quick') }}" class="space-y-3 bg-dark-100 border border-dark-300 rounded-lg p-4">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}" />
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-xs text-muted">Nama</label><input type="text" name="name" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Nama Anda"></div>
+                            <div><label class="text-xs text-muted">Email</label><input type="email" name="email" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="email@contoh.com"></div>
+                        </div>
+                        <div><label class="text-xs text-muted">Telepon</label><input type="tel" name="phone" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="08xxxxxxxxxx"></div>
+                        <div><label class="text-xs text-muted">Alamat Pengiriman</label><input type="text" name="address" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Alamat lengkap"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-xs text-muted">Jumlah</label><input type="number" name="quantity" min="1" value="1" required class="input-dark w-full px-3 py-2 rounded-lg text-sm"></div>
+                            <div><label class="text-xs text-muted">Catatan (opsional)</label><input type="text" name="notes" class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Ukuran / finishing / catatan"></div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <button type="submit" class="btn-gold px-6 py-2 rounded-lg">Pesan Sekarang</button>
+                            <span class="text-sm text-muted">Atau hubungi WA: <a href="https://wa.me/6285229269792" class="text-gold">+62 852-2926-9792</a></span>
+                        </div>
+                    </form>
+                </div>
             @else
                 <button disabled class="w-full sm:w-auto py-3 px-8 rounded-lg text-sm bg-dark-300 text-muted cursor-not-allowed">Stok Habis</button>
             @endif

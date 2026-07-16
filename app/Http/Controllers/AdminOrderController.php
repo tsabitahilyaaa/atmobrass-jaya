@@ -38,4 +38,10 @@ class AdminOrderController extends Controller
         $order->delete();
         return redirect()->route('admin.orders.index')->with('success', 'Pesanan berhasil dihapus.');
     }
+
+    public function show($id)
+    {
+        $order = Order::with(['user', 'items'])->findOrFail($id);
+        return view('admin.orders.show', compact('order'));
+    }
 }

@@ -2,14 +2,12 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\AdminMessageController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,21 +20,7 @@ Route::post('/kontak', [ContactController::class, 'send'])->name('contact.send')
 // Produk
 Route::get('/produk', [ProductController::class, 'index'])->name('products.index');
 Route::get('/produk/{slug}', [ProductController::class, 'show'])->name('products.show');
-
-// Keranjang
-Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
-Route::post('/keranjang/tambah', [CartController::class, 'add'])->name('cart.add');
-Route::post('/keranjang/update', [CartController::class, 'update'])->name('cart.update');
-Route::post('/keranjang/hapus', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/keranjang/tambah-qty', [CartController::class, 'increase'])->name('cart.increase');
-Route::post('/keranjang/kurang-qty', [CartController::class, 'decrease'])->name('cart.decrease');
-
-// Checkout
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-
-// Pesanan
-Route::get('/pesanan', [OrderController::class, 'index'])->name('orders.index');
+Route::post('/pesan-cepat', [App\Http\Controllers\OrderController::class, 'quickOrder'])->name('order.quick');
 
 // Autentikasi
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
@@ -54,9 +38,11 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/produk/{id}/edit', [AdminProductController::class, 'edit'])->name('admin.products.edit');
     Route::put('/produk/{id}', [AdminProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/produk/{id}', [AdminProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::get('/pengguna', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::delete('/pengguna/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/pesan', [AdminMessageController::class, 'index'])->name('admin.messages.index');
     Route::get('/pesanan', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/pesanan/{id}', [AdminOrderController::class, 'update'])->name('admin.orders.update');
     Route::delete('/pesanan/{id}', [AdminOrderController::class, 'destroy'])->name('admin.orders.destroy');
-    Route::get('/pengguna', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::delete('/pengguna/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/pesanan/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 });

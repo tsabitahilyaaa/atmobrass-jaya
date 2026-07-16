@@ -9,62 +9,44 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        Category::insert([
-
+        $categories = [
             [
-                'name' => 'Gagang Pintu & Handle',
-                'slug' => 'gagang-pintu-handle',
-                'description' => 'Berbagai gagang pintu, handle laci, dan knob furniture berbahan kuningan premium.',
-                'icon' => 'fa-door-open',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Aksesori & Plat',
+                'slug' => 'aksesori-plat',
+                'description' => 'Aksesori dan plat dekoratif untuk furnitur dan kerajinan metal.',
+                'icon' => 'fa-square',
             ],
-
             [
-                'name' => 'Handrail & Railing',
-                'slug' => 'handrail-railing',
-                'description' => 'Produk handrail dan railing untuk rumah, hotel, dan bangunan komersial.',
-                'icon' => 'fa-grip-lines',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Engsel',
+                'slug' => 'engsel',
+                'description' => 'Engsel berkualitas tinggi untuk pintu, lemari, dan furnitur.',
+                'icon' => 'fa-hammer',
             ],
-
             [
-                'name' => 'Lampu & Chandelier',
-                'slug' => 'lampu-chandelier',
-                'description' => 'Lampu dekoratif, chandelier, dan pencahayaan premium berbahan kuningan.',
-                'icon' => 'fa-lightbulb',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Pemegang & Tombol',
+                'slug' => 'pemegang-tombol',
+                'description' => 'Handle, knob, dan tombol untuk berbagai aplikasi pintu dan laci.',
+                'icon' => 'fa-hand-point-up',
             ],
-
             [
-                'name' => 'Kamar Mandi & Sanitary',
-                'slug' => 'sanitary',
-                'description' => 'Perlengkapan kamar mandi dan sanitary berbahan kuningan berkualitas tinggi.',
-                'icon' => 'fa-shower',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'name' => 'Roda & Kaki Perabot',
+                'slug' => 'roda-kaki-perabot',
+                'description' => 'Roda, kaki, dan komponen pendukung untuk perabot bergerak.',
+                'icon' => 'fa-cog',
             ],
+        ];
 
-            [
-                'name' => 'Ornamen & Dekorasi',
-                'slug' => 'ornamen-dekorasi',
-                'description' => 'Ornamen, dekorasi, dan aksesoris interior berbahan kuningan.',
-                'icon' => 'fa-star',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        $activeSlugs = [];
 
-            [
-                'name' => 'Aluminium & Arsitektural',
-                'slug' => 'aluminium-arsitektural',
-                'description' => 'Produk aluminium modern untuk kebutuhan arsitektural dan konstruksi.',
-                'icon' => 'fa-building',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        foreach ($categories as $category) {
+            Category::updateOrCreate(
+                ['slug' => $category['slug']],
+                $category
+            );
 
-        ]);
+            $activeSlugs[] = $category['slug'];
+        }
+
+        Category::whereNotIn('slug', $activeSlugs)->delete();
     }
 }

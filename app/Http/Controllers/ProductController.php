@@ -10,7 +10,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with('category')->where('is_active', true);
 
         if ($request->filled('q')) {
             $q = $request->input('q');
@@ -35,9 +35,13 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::where('slug', $slug)->firstOrFail();
+        $product = Product::where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
+
         $related = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->where('is_active', true)
             ->take(4)
             ->get();
 

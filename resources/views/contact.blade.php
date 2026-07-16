@@ -14,15 +14,15 @@
             <div class="space-y-6 mb-8">
                 <div class="flex gap-4 items-start">
                     <div class="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-map-marker-alt text-gold"></i></div>
-                    <div><h4 class="font-semibold text-sm mb-1">Alamat</h4><p class="text-sm text-muted">Jl. Industri Raya No. 45, Kelurahan Rungkut, Kec. Rungkut, Surabaya 60293</p></div>
+                    <div><h4 class="font-semibold text-sm mb-1">Alamat</h4><p class="text-sm text-muted">Ngulakan, Sumberejo, Kec. Jaken, Kabupaten Pati, Jawa Tengah</p></div>
                 </div>
                 <div class="flex gap-4 items-start">
                     <div class="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-phone text-gold"></i></div>
-                    <div><h4 class="font-semibold text-sm mb-1">Telepon</h4><p class="text-sm text-muted">+62 31-9876-5432 / +62 812-3456-7890</p></div>
+                    <div><h4 class="font-semibold text-sm mb-1">Telepon</h4><p class="text-sm text-muted">+62 852-2926-9792</p></div>
                 </div>
                 <div class="flex gap-4 items-start">
                     <div class="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-envelope text-gold"></i></div>
-                    <div><h4 class="font-semibold text-sm mb-1">Email</h4><p class="text-sm text-muted">info@atmobrassjaya.com / sales@atmobrassjaya.com</p></div>
+                    <div><h4 class="font-semibold text-sm mb-1">Email</h4><p class="text-sm text-muted">atmobrassjaya.cv@gmail.com</p></div>
                 </div>
                 <div class="flex gap-4 items-start">
                     <div class="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center flex-shrink-0"><i class="fas fa-clock text-gold"></i></div>
@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="rounded-xl overflow-hidden border border-dark-300 aspect-[4/3]">
-                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=112.72%2C-7.35%2C112.78%2C-7.31&layer=mapnik" class="w-full h-full" loading="lazy" style="filter:invert(90%) hue-rotate(180deg) brightness(0.9) contrast(0.9)"></iframe>
+                <iframe src="https://maps.google.com/maps?q=Ngulakan,+Sumberejo,+Kec.+Jaken,+Kabupaten+Pati,+Jawa+Tengah&output=embed" class="w-full h-full" loading="lazy" style="border:0"></iframe>
             </div>
         </div>
 

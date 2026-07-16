@@ -24,24 +24,22 @@
             <div>
                 <h4 class="font-display font-semibold text-sm mb-4 text-gold">Kategori</h4>
                 <div class="flex flex-col gap-2">
-                    <a href="{{ route('products.index', ['category' => 'brass']) }}" class="text-sm text-muted hover:text-gold transition-colors">Brass / Kuningan</a>
-                    <a href="{{ route('products.index', ['category' => 'aluminium']) }}" class="text-sm text-muted hover:text-gold transition-colors">Aluminium</a>
-                    <a href="{{ route('products.index', ['category' => 'accessories']) }}" class="text-sm text-muted hover:text-gold transition-colors">Accessories</a>
-                    <a href="{{ route('products.index', ['category' => 'lamp']) }}" class="text-sm text-muted hover:text-gold transition-colors">Decorative Lamp</a>
+                    <a href="{{ route('products.index', ['category' => 'aksesori-plat']) }}" class="text-sm text-muted hover:text-gold transition-colors">Aksesori & Plat</a>
+                    <a href="{{ route('products.index', ['category' => 'engsel']) }}" class="text-sm text-muted hover:text-gold transition-colors">Engsel</a>
+                    <a href="{{ route('products.index', ['category' => 'pemegang-tombol']) }}" class="text-sm text-muted hover:text-gold transition-colors">Pemegang & Tombol</a>
+                    <a href="{{ route('products.index', ['category' => 'roda-kaki-perabot']) }}" class="text-sm text-muted hover:text-gold transition-colors">Roda & Kaki Perabot</a>
                 </div>
             </div>
 
             <div>
                 <h4 class="font-display font-semibold text-sm mb-4 text-gold">Kontak</h4>
                 <div class="flex flex-col gap-3 text-sm text-muted">
-                    <p><i class="fas fa-map-marker-alt text-gold mr-2"></i>Jl. Industri No. 45, Surabaya</p>
-                    <p><i class="fas fa-phone text-gold mr-2"></i>+62 31-9876-5432</p>
-                    <p><i class="fas fa-envelope text-gold mr-2"></i>info@atmobrassjaya.com</p>
+                    <p><i class="fas fa-map-marker-alt text-gold mr-2"></i>Ngulakan, Sumberejo, Kec. Jaken, Kabupaten Pati, Jawa Tengah</p>
+                    <p><i class="fas fa-phone text-gold mr-2"></i>+62 852-2926-9792</p>
+                    <p><i class="fas fa-envelope text-gold mr-2"></i>atmobrassjaya.cv@gmail.com</p>
                 </div>
                 <div class="flex gap-3 mt-4">
-                    <a href="#" class="w-9 h-9 rounded-full border border-dark-300 flex items-center justify-center text-muted hover:border-gold hover:text-gold transition-colors"><i class="fab fa-instagram text-sm"></i></a>
-                    <a href="#" class="w-9 h-9 rounded-full border border-dark-300 flex items-center justify-center text-muted hover:border-gold hover:text-gold transition-colors"><i class="fab fa-whatsapp text-sm"></i></a>
-                    <a href="#" class="w-9 h-9 rounded-full border border-dark-300 flex items-center justify-center text-muted hover:border-gold hover:text-gold transition-colors"><i class="fab fa-facebook-f text-sm"></i></a>
+                    <a href="https://wa.me/6285229269792" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full border border-dark-300 flex items-center justify-center text-muted hover:border-gold hover:text-gold transition-colors"><i class="fab fa-whatsapp text-sm"></i></a>
                 </div>
             </div>
         </div>

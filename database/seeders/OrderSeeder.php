@@ -23,12 +23,20 @@ class OrderSeeder extends Seeder
 
                 $orderNumber = 'ORD-' . strtoupper(Str::random(10));
 
+                $cities = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Semarang'];
+                $city = $cities[array_rand($cities)];
+
                 $order = Order::create([
                     'user_id' => $user->id,
                     'order_number' => $orderNumber,
                     'status' => $this->randomStatus(),
                     'total_amount' => 0, // sementara
-                    'shipping_address' => 'Jl. Contoh No. ' . rand(1, 100),
+                    'payment_method' => 'bca',
+                    'shipping_name' => $user->name,
+                    'shipping_phone' => '0812' . rand(1000000, 9999999),
+                    'shipping_city' => $city,
+                    'shipping_address' => 'Jl. Contoh No. ' . rand(1, 100) . ', ' . $city,
+                    'shipping_postal' => str_pad((string) rand(10000, 99999), 5, '0', STR_PAD_LEFT),
                     'notes' => rand(0, 1) ? 'Tolong kirim cepat ya' : null,
                     'ordered_at' => now()->subDays(rand(1, 30))
                 ]);

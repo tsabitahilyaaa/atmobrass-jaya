@@ -13,9 +13,9 @@
         <div>
             <div class="w-16 h-0.5 bg-gradient-to-r from-gold to-transparent mb-4"></div>
             <h2 class="font-display font-bold text-xl sm:text-2xl mb-4">Mengenal Lebih Dekat Atmobrass Jaya</h2>
-            <p class="text-sm text-muted leading-relaxed mb-4">CV Atmobrass Jaya didirikan pada tahun 2012 di Surabaya, Jawa Timur. Berawal dari bengkel kecil yang berfokus pada pengolahan logam kuningan, kini kami telah berkembang menjadi perusahaan penyedia produk logam premium terpercaya yang melayani seluruh Indonesia.</p>
-            <p class="text-sm text-muted leading-relaxed mb-4">Dengan pengalaman lebih dari 12 tahun, kami menggabungkan keahlian tradisional pengolahan logam dengan teknologi modern untuk menghasilkan produk-produk berkualitas tinggi yang memenuhi standar industri nasional maupun internasional.</p>
-            <p class="text-sm text-muted leading-relaxed">Produk kami meliputi komponen kuningan (brass), aluminium, aksesoris furniture premium, serta lampu dekoratif yang telah dipercaya oleh ratusan pelanggan dari berbagai sektor — mulai dari kontraktor bangunan, desainer interior, hingga pengusaha hospitality.</p>
+            <p class="text-sm text-muted leading-relaxed mb-4">CV Atmobrass Jaya beroperasi dari Ngulakan, Sumberejo, Kec. Jaken, Kabupaten Pati, Jawa Tengah. Berawal dari bengkel kecil yang berfokus pada pengolahan logam kuningan, kini kami telah berkembang menjadi perusahaan penyedia produk logam premium terpercaya yang melayani seluruh Indonesia.</p>
+            <p class="text-sm text-muted leading-relaxed mb-4">Dengan pengalaman lebih dari 5 tahun, kami menggabungkan keahlian tradisional pengolahan logam dengan teknologi modern untuk menghasilkan produk-produk berkualitas tinggi yang memenuhi standar industri nasional maupun internasional.</p>
+            <p class="text-sm text-muted leading-relaxed">Produk kami meliputi komponen kuningan (brass), aluminium, aksesoris furniture premium, serta lampu dekoratif. Kami telah dipercaya oleh ratusan pelanggan dari berbagai sektor — mulai dari kontraktor dan desainer interior hingga pelaku usaha hospitality — dan juga pernah melayani beberapa perusahaan mitra dari luar negeri.</p>
         </div>
         <div class="rounded-xl overflow-hidden border border-dark-300 aspect-[4/3] bg-dark-200">
             <img src="https://picsum.photos/seed/atmobrassfactory/800/600" alt="Pabrik Atmobrass" class="w-full h-full object-cover">

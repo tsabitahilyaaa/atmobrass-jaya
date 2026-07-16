@@ -2,7 +2,7 @@
 
 <div class="card-product rounded-xl overflow-hidden group" onclick="window.location='{{ route('products.show', $product->slug) }}'">
     <div class="relative aspect-square overflow-hidden bg-dark-200">
-        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+        <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
         @if($product->stock < 10 && $product->stock > 0)
             <span class="absolute top-3 left-3 bg-red-500/90 text-white text-xs px-2 py-1 rounded-md font-medium">Stok Terbatas</span>
         @elseif($product->stock === 0)
