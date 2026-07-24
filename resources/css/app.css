@@ -122,3 +122,18 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+.preference-chip {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+}
+
+.preference-chip.selected {
+    transform: scale(1.03);
+}
+
+.preference-chip.selected span {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #0F0F0F;
+    box-shadow: 0 18px 45px rgba(212, 175, 55, 0.18);
+}

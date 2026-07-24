@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminMessageController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ProduksiController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman publik
@@ -20,18 +23,44 @@ Route::post('/kontak', [ContactController::class, 'send'])->name('contact.send')
 // Produk
 Route::get('/produk', [ProductController::class, 'index'])->name('products.index');
 Route::get('/produk/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+// Halaman prediksi (memanggil API Python)
+Route::get('/prediksi', [ProduksiController::class, 'index'])->name('prediksi.index');
+
+// Onboarding Preferensi
+Route::get('/preferensi', [PreferenceController::class, 'index'])->name('preferences.index');
+Route::post('/preferensi', [PreferenceController::class, 'store'])->name('preferences.store');
+
 Route::post('/pesan-cepat', [App\Http\Controllers\OrderController::class, 'quickOrder'])->name('order.quick');
 
-// Autentikasi
+// =========================
+// AUTH CUSTOMER
+// =========================
+
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// =========================
+// AUTH ADMIN
+// =========================
+
+Route::get('/portal/login', [AdminAuthController::class, 'showLoginForm'])
+    ->name('admin.login');
+
+Route::post('/portal/login', [AdminAuthController::class, 'login'])
+    ->name('admin.login.post');
+
+Route::post('/portal/logout', [AdminAuthController::class, 'logout'])
+    ->name('admin.logout');
+
 // Admin (dilindungi middleware)
-Route::prefix('admin')->middleware('admin')->group(function () {
-    Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/produk', [AdminProductController::class, 'index'])->name('admin.products.index');
     Route::get('/produk/create', [AdminProductController::class, 'create'])->name('admin.products.create');
     Route::post('/produk', [AdminProductController::class, 'store'])->name('admin.products.store');
@@ -45,4 +74,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::put('/pesanan/{id}', [AdminOrderController::class, 'update'])->name('admin.orders.update');
     Route::delete('/pesanan/{id}', [AdminOrderController::class, 'destroy'])->name('admin.orders.destroy');
     Route::get('/pesanan/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::get('/lstm', [AdminController::class, 'lstm'])->name('admin.lstm');
+    Route::post('/lstm/reload', [AdminController::class, 'reloadLstm'])->name('admin.lstm.reload');
 });

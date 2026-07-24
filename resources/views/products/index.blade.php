@@ -23,6 +23,26 @@
         @endforeach
     </div>
 
+    @if(isset($recommendedProducts) && $recommendedProducts->count())
+        <div class="mb-12 anim-scroll">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
+                <div>
+                    <p class="text-gold text-sm font-semibold tracking-widest uppercase">Rekomendasi Untuk Anda</p>
+                    <h2 class="text-2xl font-bold text-white">Produk yang sesuai dengan preferensi Anda</h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                @foreach($recommendedProducts as $product)
+                    @include('partials.product-card', ['product' => $product])
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    <div class="mb-6 anim-scroll">
+        <p class="text-gold text-sm font-semibold tracking-widest uppercase mb-3">Semua Produk</p>
+    </div>
+
     @if($products->count() === 0)
         <div class="text-center py-20">
             <i class="fas fa-search text-4xl text-dark-400 mb-4 block"></i>

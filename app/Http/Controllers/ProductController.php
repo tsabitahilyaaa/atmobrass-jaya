@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
 {
@@ -45,6 +46,26 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('products.show', compact('product', 'related'));
+        // Request content-based recommendations from Python API by product name
+        $recommendedContent = collect();
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
+        try {
+            $resp = Http::timeout(5)->get($apiBase . '/api/recommend_by_name', ['name' => $product->name, 'n' => 4]);
+            if ($resp->successful()) {
+                $json = $resp->json();
+                foreach ($json['data'] ?? [] as $rec) {
+                    // Try to find matching product in local DB by name
+                    $p = Product::where('name', $rec['nama_produk'] ?? '')->first();
+                    if ($p) {
+                        $recommendedContent->push($p);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // silent fail; recommendedContent stays empty
+        }
+
+        return view('products.show', compact('product', 'related', 'recommendedContent'));
     }
 }

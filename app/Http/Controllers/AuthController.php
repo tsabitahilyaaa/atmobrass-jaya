@@ -17,25 +17,33 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+{
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
-            $request->session()->regenerate();
-
-            if (Auth::user()->isAdmin()) {
-                return redirect()->route('admin.dashboard');
-            }
-            return redirect()->intended(route('home'));
-        }
+    if (!Auth::attempt($credentials, $request->filled('remember'))) {
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->withInput($request->only('email'));
     }
+
+    $request->session()->regenerate();
+
+    // Jika ternyata admin login lewat halaman customer
+    if (Auth::user()->role === 'admin') {
+
+        Auth::logout();
+
+        return back()->withErrors([
+            'email' => 'Administrator harus login melalui Portal Admin.',
+        ]);
+    }
+
+    return redirect()->intended(route('home'));
+}
 
     public function registerForm()
     {
@@ -59,7 +67,7 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
             'phone' => $validated['phone'] ?? null,
-            'role' => 'user',
+            'role' => 'customer',
         ]);
 
         Auth::login($user);

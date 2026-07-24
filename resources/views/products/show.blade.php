@@ -70,5 +70,16 @@
         </div>
     </div>
     @endif
+
+    @if(isset($recommendedContent) && $recommendedContent->count() > 0)
+    <div class="mt-12">
+        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Rekomendasi Mirip (Content‑Based)</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            @foreach($recommendedContent as $rp)
+                @include('partials.product-card', ['product' => $rp])
+            @endforeach
+        </div>
+    </div>
+    @endif
 </section>
 @endsection

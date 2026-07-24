@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -56,6 +57,66 @@ class AdminController extends Controller
             'catLabels', 'catValues',
             'predicted'
         ));
+    }
+
+    public function lstm()
+    {
+        $predictions = collect();
+        $history = null;
+        $error = null;
+        $historyError = null;
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
+        try {
+            $response = Http::timeout(10)->get("{$apiBase}/api/predict");
+            if ($response->successful()) {
+                $data = $response->json('data', []);
+                foreach ($data as $item) {
+                    $predictions->push((object) [
+                        'id_produk' => $item['id_produk'] ?? null,
+                        'nama_barang' => $item['nama_barang'] ?? null,
+                        'prediksi_pcs' => $item['prediksi_pcs'] ?? null,
+                    ]);
+                }
+            } else {
+                $error = 'Gagal memuat prediksi LSTM. Status: ' . $response->status();
+            }
+        } catch (\Exception $e) {
+            $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        // Fetch history data
+        try {
+            $historyResponse = Http::timeout(10)->get("{$apiBase}/api/history");
+            if ($historyResponse->successful()) {
+                $history = $historyResponse->json();
+            } else {
+                $historyError = 'Gagal memuat riwayat penjualan. Status: ' . $historyResponse->status();
+            }
+        } catch (\Exception $e) {
+            $historyError = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        return view('admin.lstm', compact('predictions', 'error', 'history', 'historyError'));
+    }
+
+    public function reloadLstm(Request $request)
+    {
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $error = null;
+
+        try {
+            $response = Http::timeout(10)->post("{$apiBase}/api/reload");
+            if ($response->successful()) {
+                return redirect()->route('admin.lstm')->with('status', 'Reload dataset dan model berhasil.');
+            }
+
+            $error = 'Gagal memuat ulang ML server. Status: ' . $response->status();
+        } catch (\Exception $e) {
+            $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        return redirect()->route('admin.lstm')->with('error', $error);
     }
 
     private function predictNext($data)
