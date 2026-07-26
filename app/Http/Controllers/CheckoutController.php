@@ -2,134 +2,114 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Product;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\Product;
+use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
     public function index()
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
+            session()->put('url.intended', route('checkout.index'));
+
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        $cart = session()->get('cart', []);
-        if (empty($cart)) {
+        $cartData = $this->getCartItems();
+        $cartItems = $cartData['items'];
+        $total = $cartData['total'];
+
+        if (empty($cartItems)) {
             return redirect()->route('cart.index')->with('error', 'Keranjang kosong.');
         }
 
-        $cartItems = [];
-        $total = 0;
-
-        foreach ($cart as $id => $qty) {
-            $product = Product::find($id);
-            if ($product) {
-                $cartItems[] = (object) [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => $product->price,
-                    'image' => $product->image,
-                    'qty' => $qty,
-                    'subtotal' => $product->price * $qty,
-                ];
-                $total += $product->price * $qty;
-            }
+        $recommendedContent = collect();
+        if (! empty($cartItems)) {
+            $referenceProduct = end($cartItems);
+            $recommendedContent = $this->fetchContentRecommendations($referenceProduct->name, 4);
         }
 
-        return view('checkout.index', compact('cartItems', 'total'));
+        return view('checkout.index', compact('cartItems', 'total', 'recommendedContent'));
     }
 
     public function process(Request $request)
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')
-                ->with('error', 'Silakan login terlebih dahulu.');
+        if (! auth()->check()) {
+            session()->put('url.intended', route('checkout.index'));
+
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
-            'address' => 'required|string',
-            'postal' => 'required|string|max:10',
-            'payment' => 'required|string',
+            'phone' => ['required', 'regex:/^[0-9]{1,15}$/', 'max:15'],
+            'address' => 'required|string|max:1000',
+            'notes' => 'nullable|string|max:2000',
+        ], [
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
         ]);
 
-        $cart = session()->get('cart', []);
+        $cartData = $this->getCartItems();
+        $cartItems = $cartData['items'];
 
-        if (empty($cart)) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Keranjang kosong.');
+        if (empty($cartItems)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang kosong.');
         }
 
         $total = 0;
 
-        foreach ($cart as $id => $qty) {
+        foreach ($cartItems as $item) {
+            $product = Product::find($item->id);
 
-            $product = Product::find($id);
-
-            if (!$product || $product->stock < $qty) {
-                return back()->with(
-                    'error',
-                    'Stok produk ' .
-                    ($product ? $product->name : '') .
-                    ' tidak mencukupi.'
-                );
+            if (! $product || $product->stock < $item->qty) {
+                return back()->with('error', 'Stok produk ' . ($product ? $product->name : '') . ' tidak mencukupi.');
             }
 
-            $total += $product->price * $qty;
+            $total += $item->subtotal;
         }
 
         $order = Order::create([
             'user_id' => auth()->id(),
-
-            'order_number' =>
-                'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-
+            'order_number' => 'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
             'status' => 'pending',
-
             'total_amount' => $total,
-
-            'shipping_address' =>
-                $request->name . "\n" .
-                $request->phone . "\n" .
-                $request->city . "\n" .
-                $request->address . "\n" .
-                $request->postal,
-
-            'notes' =>
-                'Metode pembayaran: ' . $request->payment,
-
+            'shipping_address' => $request->address,
+            'notes' => $request->notes,
             'ordered_at' => now(),
         ]);
 
-        foreach ($cart as $id => $qty) {
+        foreach ($cartItems as $item) {
+            $product = Product::find($item->id);
 
-            $product = Product::find($id);
+            if (! $product) {
+                continue;
+            }
 
-            $subtotal = $product->price * $qty;
-
-            $product->decrement('stock', $qty);
+            $product->decrement('stock', $item->qty);
 
             $order->items()->create([
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'product_price' => $product->price,
                 'product_image' => $product->image,
-                'quantity' => $qty,
-                'subtotal' => $subtotal,
+                'quantity' => $item->qty,
+                'subtotal' => $item->subtotal,
             ]);
+        }
+
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->first();
+
+            if ($cart) {
+                $cart->items()->delete();
+                $cart->delete();
+            }
         }
 
         session()->forget('cart');
 
-        return redirect()
-            ->route('orders.index')
-            ->with(
-                'success',
-                'Pesanan berhasil dibuat! Nomor: ' . $order->order_number
-            );
+        return redirect()->route('orders.index')->with('success', 'Pesanan berhasil dibuat! Nomor: ' . $order->order_number);
     }
-}   
+}
+   
