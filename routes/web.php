@@ -76,4 +76,5 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/pesanan/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::get('/lstm', [AdminController::class, 'lstm'])->name('admin.lstm');
     Route::post('/lstm/reload', [AdminController::class, 'reloadLstm'])->name('admin.lstm.reload');
+    Route::get('/history', [AdminController::class, 'history'])->name('admin.history');
 });

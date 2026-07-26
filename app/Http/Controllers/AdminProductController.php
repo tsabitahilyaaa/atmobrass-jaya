@@ -9,10 +9,19 @@ use Str;
 
 class AdminProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+        $sort = $request->query('sort');
+
+        $products = Product::with('category');
+        if ($sort === 'stock_asc') {
+            $products = $products->orderBy('stock', 'asc');
+        } else {
+            $products = $products->latest();
+        }
+
+        $products = $products->paginate(10)->withQueryString();
+        return view('admin.products.index', compact('products', 'sort'));
     }
 
     public function create()

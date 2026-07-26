@@ -5,8 +5,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 import os
 
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, LSTM, Dense, Concatenate
+from tensorflow.keras.models import load_model
 from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
@@ -18,7 +17,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(SCRIPT_DIR, 'dataset_atmobrass.csv')
 MODEL_PATH = os.path.join(SCRIPT_DIR, 'model_atmobrass.h5')
-LOOKBACK = 3
+LOOKBACK = 60
 
 # Global state for reloadable data and model
 last_reload = None
@@ -67,23 +66,25 @@ def load_data_and_model():
 
     num_static_features = static_features_dict[product_features.index[0]].shape[0]
 
-    input_ts = Input(shape=(LOOKBACK, 1), name="input_waktu")
-    lstm_out = LSTM(32, activation='relu')(input_ts)
-
-    input_static = Input(shape=(num_static_features,), name="input_fitur")
-    dense_static = Dense(16, activation='relu')(input_static)
-
-    gabungan = Concatenate()([lstm_out, dense_static])
-    dense_gabungan = Dense(16, activation='relu')(gabungan)
-    output = Dense(1, activation='linear')(dense_gabungan)
-
-    model = Model(inputs=[input_ts, input_static], outputs=output)
-    model.load_weights(MODEL_PATH)
+    model = load_model(MODEL_PATH, compile=False)
 
     last_reload = pd.Timestamp.now()
     data_mtime = os.path.getmtime(DATA_PATH)
     model_mtime = os.path.getmtime(MODEL_PATH)
     print(f"[INFO] Reload lengkap: {last_reload}")
+
+
+def get_predicted_month_label():
+    if pivot_sales is None or pivot_sales.empty:
+        return None
+
+    next_month = pivot_sales.index.max() + pd.DateOffset(months=1)
+    nama_bulan = {
+        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+        5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+        9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+    }
+    return f"{nama_bulan[next_month.month]} {next_month.year}"
 
 
 def maybe_reload():
@@ -112,10 +113,10 @@ def predict_produksi():
         hasil_prediksi = []
 
         scaled_sales = scaler_qty.transform(pivot_sales)
-        data_3_bulan_terakhir = scaled_sales[-LOOKBACK:]
+        data_lookback = scaled_sales[-LOOKBACK:]
 
         for j, prod_id in enumerate(kolom_produk):
-            input_waktu_pred = data_3_bulan_terakhir[:, j].reshape(1, LOOKBACK, 1)
+            input_waktu_pred = data_lookback[:, j].reshape(1, LOOKBACK, 1)
             input_fitur_pred = static_features_dict[prod_id].reshape(1, -1)
 
             pred_skala = model.predict({'input_waktu': input_waktu_pred, 'input_fitur': input_fitur_pred}, verbose=0)
@@ -133,9 +134,12 @@ def predict_produksi():
                 'prediksi_pcs': jumlah_produksi
             })
 
+        next_month_label = get_predicted_month_label()
+
         return jsonify({
             'status': 'success',
             'pesan': 'Prediksi produksi bulan depan berhasil digenerate.',
+            'prediksi_bulan': next_month_label,
             'data': hasil_prediksi
         }), 200
 
@@ -317,6 +321,38 @@ def get_sales_history():
             'status': 'error',
             'pesan': f"Terjadi kesalahan: {str(e)}"
         }), 500
+
+
+@app.route('/api/history/products', methods=['GET'])
+def get_products_timeseries():
+    try:
+        maybe_reload()
+
+        # Use the precomputed pivot_sales (monthly index, columns=ID_Produk)
+        idx = pivot_sales.index.to_list()
+        # Format labels as 'YYYY-MM' for clarity
+        labels = [d.strftime('%Y-%m') for d in idx]
+
+        products = []
+        for pid in kolom_produk:
+            series = pivot_sales[pid].fillna(0).astype(int).tolist()
+            products.append({
+                'id_produk': str(pid),
+                'nama_produk': dict_nama_produk.get(pid, ''),
+                'series': series
+            })
+
+        return jsonify({
+            'status': 'success',
+            'labels': labels,
+            'products': products
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] History products endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'pesan': str(e)}), 500
 
 
 if __name__ == '__main__':

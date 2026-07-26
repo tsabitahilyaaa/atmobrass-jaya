@@ -13,6 +13,21 @@
         Tambah Produk
     </a>
 </div>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm text-muted">Urutkan stok:</span>
+        <a href="{{ route('admin.products.index', ['sort' => 'stock_asc']) }}" class="inline-flex items-center gap-2 rounded-lg border border-dark-300 bg-dark-200 px-4 py-2 text-sm font-semibold text-white transition hover:border-gold hover:text-gold {{ $sort === 'stock_asc' ? 'ring-2 ring-gold' : '' }}">
+            <i class="fas fa-sort-amount-down"></i>
+            Terendah ke Tertinggi
+        </a>
+        @if($sort === 'stock_asc')
+            <a href="{{ route('admin.products.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-dark-300 bg-dark-200 px-4 py-2 text-sm font-semibold text-white transition hover:border-gold hover:text-gold">
+                <i class="fas fa-rotate-left"></i>
+                Reset
+            </a>
+        @endif
+    </div>
+</div>
 
 <div class="bg-dark-100 border border-dark-300 rounded-2xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto">

@@ -67,17 +67,20 @@ class AdminController extends Controller
         $historyError = null;
         $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
 
+        $predictedMonth = null;
         try {
             $response = Http::timeout(10)->get("{$apiBase}/api/predict");
             if ($response->successful()) {
-                $data = $response->json('data', []);
-                foreach ($data as $item) {
+                $data = $response->json();
+                $rawPredictions = $data['data'] ?? [];
+                foreach ($rawPredictions as $item) {
                     $predictions->push((object) [
                         'id_produk' => $item['id_produk'] ?? null,
                         'nama_barang' => $item['nama_barang'] ?? null,
                         'prediksi_pcs' => $item['prediksi_pcs'] ?? null,
                     ]);
                 }
+                $predictedMonth = $data['prediksi_bulan'] ?? null;
             } else {
                 $error = 'Gagal memuat prediksi LSTM. Status: ' . $response->status();
             }
@@ -97,7 +100,41 @@ class AdminController extends Controller
             $historyError = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
 
-        return view('admin.lstm', compact('predictions', 'error', 'history', 'historyError'));
+        return view('admin.lstm', compact('predictions', 'error', 'history', 'historyError', 'predictedMonth'));
+    }
+
+    public function history()
+    {
+        $history = null;
+        $productsData = null;
+        $historyError = null;
+        $error = null;
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
+        try {
+            $historyResponse = Http::timeout(10)->get("{$apiBase}/api/history");
+            if ($historyResponse->successful()) {
+                $history = $historyResponse->json();
+            } else {
+                $historyError = 'Gagal memuat riwayat penjualan. Status: ' . $historyResponse->status();
+            }
+        } catch (\Exception $e) {
+            $historyError = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        // Fetch products timeseries
+        try {
+            $resp = Http::timeout(10)->get("{$apiBase}/api/history/products");
+            if ($resp->successful()) {
+                $productsData = $resp->json();
+            } else {
+                $error = 'Gagal memuat data produk. Status: ' . $resp->status();
+            }
+        } catch (\Exception $e) {
+            $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        return view('admin.history', compact('history', 'productsData', 'historyError', 'error'));
     }
 
     public function reloadLstm(Request $request)

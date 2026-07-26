@@ -3,6 +3,7 @@
  $dash = $r === 'admin';
  $prods = str_contains($r, 'admin/produk');
  $lstm = str_contains($r, 'admin/lstm');
+ $history = str_contains($r, 'admin/history');
  $msgs = str_contains($r, 'admin/pesan');
  $ords = str_contains($r, 'admin/pesanan');
  $usrs = str_contains($r, 'admin/pengguna');
@@ -25,6 +26,9 @@
         </a>
         <a href="{{ route('admin.lstm') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $lstm ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-brain w-5"></i>Prediksi LSTM
+        </a>
+        <a href="{{ route('admin.history') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $history ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-clock-rotate-left w-5"></i>Riwayat Penjualan
         </a>
         <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $msgs ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-envelope-open-text w-5"></i>Pesan
