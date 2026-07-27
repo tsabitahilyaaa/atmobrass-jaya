@@ -19,7 +19,7 @@
                         </div>
                         <div>
                             <label class="text-xs text-muted mb-1 block">Nomor Telepon</label>
-                            <input type="tel" name="phone" value="{{ auth()->user()->phone ?? '' }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
+                            <input type="tel" name="phone" value="{{ auth()->user()->phone ?? '' }}" required inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
                         </div>
                         <div>
                             <label class="text-xs text-muted mb-1 block">Kota</label>

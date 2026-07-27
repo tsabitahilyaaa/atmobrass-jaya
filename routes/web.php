@@ -1,16 +1,19 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\PreferenceController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminMessageController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PreferenceController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProduksiController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,7 +34,7 @@ Route::get('/prediksi', [ProduksiController::class, 'index'])->name('prediksi.in
 Route::get('/preferensi', [PreferenceController::class, 'index'])->name('preferences.index');
 Route::post('/preferensi', [PreferenceController::class, 'store'])->name('preferences.store');
 
-Route::post('/pesan-cepat', [App\Http\Controllers\OrderController::class, 'quickOrder'])->name('order.quick');
+Route::post('/pesan-cepat', [OrderController::class, 'quickOrder'])->name('order.quick');
 
 // =========================
 // AUTH CUSTOMER
@@ -45,18 +48,26 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
+Route::post('/keranjang/tambah', [CartController::class, 'add'])->name('cart.add');
+Route::post('/keranjang/update', [CartController::class, 'update'])->name('cart.update');
+Route::post('/keranjang/hapus', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/keranjang/naik', [CartController::class, 'increase'])->name('cart.increase');
+Route::post('/keranjang/turun', [CartController::class, 'decrease'])->name('cart.decrease');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/riwayat-pesanan', [OrderController::class, 'index'])->name('orders.index');
+});
+
 // =========================
 // AUTH ADMIN
 // =========================
 
-Route::get('/portal/login', [AdminAuthController::class, 'showLoginForm'])
-    ->name('admin.login');
-
-Route::post('/portal/login', [AdminAuthController::class, 'login'])
-    ->name('admin.login.post');
-
-Route::post('/portal/logout', [AdminAuthController::class, 'logout'])
-    ->name('admin.logout');
+Route::get('/portal/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/portal/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
+Route::post('/portal/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Admin (dilindungi middleware)
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
