@@ -5,14 +5,6 @@
 @section('content')
 <h1 class="font-display font-bold text-2xl mb-6">Prediksi Produksi LSTM</h1>
 
-@if(session('status'))
-    <div class="bg-green-100 text-green-800 p-4 rounded-lg mb-6">{{ session('status') }}</div>
-@endif
-
-@if(session('error'))
-    <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-6">{{ session('error') }}</div>
-@endif
-
 <!-- ============ RIWAYAT PENJUALAN DATASET ============ -->
 @if($history && !$historyError)
 <div class="bg-dark-100 border border-dark-300 rounded-xl p-6 mb-8">
