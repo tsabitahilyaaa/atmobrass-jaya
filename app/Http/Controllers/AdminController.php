@@ -65,18 +65,27 @@ class AdminController extends Controller
         $history = null;
         $error = null;
         $historyError = null;
+        $forecast = null;
+        $forecastError = null;
         $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
 
+        $predictedMonth = null;
         try {
-            $response = Http::timeout(10)->get("{$apiBase}/api/predict");
+            $response = Http::timeout(30)->get("{$apiBase}/api/predict");
             if ($response->successful()) {
-                $data = $response->json('data', []);
-                foreach ($data as $item) {
+                $data = $response->json();
+                $rawPredictions = $data['data'] ?? [];
+                foreach ($rawPredictions as $item) {
                     $predictions->push((object) [
                         'id_produk' => $item['id_produk'] ?? null,
                         'nama_barang' => $item['nama_barang'] ?? null,
                         'prediksi_pcs' => $item['prediksi_pcs'] ?? null,
                     ]);
+                }
+                $predictedMonth = $data['prediksi_bulan'] ?? null;
+
+                if (empty($rawPredictions)) {
+                    $error = 'Prediksi belum tersedia atau model belum menghasilkan output. Silakan cek backend Python.';
                 }
             } else {
                 $error = 'Gagal memuat prediksi LSTM. Status: ' . $response->status();
@@ -85,7 +94,50 @@ class AdminController extends Controller
             $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
 
+        if (empty($predictedMonth)) {
+            $predictedMonth = Carbon::now()->addMonth()->locale('id_ID')->translatedFormat('F Y');
+        }
+
         // Fetch history data
+        try {
+            $historyResponse = Http::timeout(30)->get("{$apiBase}/api/history");
+            if ($historyResponse->successful()) {
+                $history = $historyResponse->json();
+            } else {
+                $historyError = 'Gagal memuat riwayat penjualan. Status: ' . $historyResponse->status();
+            }
+        } catch (\Exception $e) {
+            $historyError = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        // Fetch multi-step forecast
+        try {
+            $forecastResponse = Http::timeout(60)->get("{$apiBase}/api/forecast", ['steps' => 5]);
+            if ($forecastResponse->successful()) {
+                $forecast = $forecastResponse->json('data');
+            } else {
+                $forecastError = 'Gagal memuat forecast. Status: ' . $forecastResponse->status();
+            }
+        } catch (\Exception $e) {
+            $forecastError = 'Gagal menghubungi server forecast ML: ' . $e->getMessage();
+        }
+
+        return view('admin.lstm', compact(
+            'predictions', 'error', 'history', 'historyError', 'predictedMonth',
+            'forecast', 'forecastError'
+        ));
+    }
+
+    public function history()
+    {
+        $history = null;
+        $productsData = null;
+        $historyError = null;
+        $evaluation = null;
+        $evaluationError = null;
+        $error = null;
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
         try {
             $historyResponse = Http::timeout(10)->get("{$apiBase}/api/history");
             if ($historyResponse->successful()) {
@@ -97,7 +149,57 @@ class AdminController extends Controller
             $historyError = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
 
-        return view('admin.lstm', compact('predictions', 'error', 'history', 'historyError'));
+        // Fetch evaluation results for 2025 backtest
+        try {
+            $evaluationResponse = Http::timeout(120)->get("{$apiBase}/api/evaluate");
+            if ($evaluationResponse->successful()) {
+                $evaluation = $evaluationResponse->json('data');
+            } else {
+                $evaluationError = 'Gagal memuat evaluasi model. Status: ' . $evaluationResponse->status();
+            }
+        } catch (\Exception $e) {
+            $evaluationError = 'Gagal menghubungi server evaluasi ML: ' . $e->getMessage();
+        }
+
+        // Fetch products timeseries
+        try {
+            $resp = Http::timeout(10)->get("{$apiBase}/api/history/products");
+            if ($resp->successful()) {
+                $productsData = $resp->json();
+            } else {
+                $error = 'Gagal memuat data produk. Status: ' . $resp->status();
+            }
+        } catch (\Exception $e) {
+            $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
+
+        return view('admin.history', compact('history', 'productsData', 'historyError', 'error', 'evaluation', 'evaluationError'));
+    }
+
+    public function payment()
+    {
+        $qrisImage = $this->qrisImageUrl();
+        return view('admin.payment', compact('qrisImage'));
+    }
+
+    public function savePayment(Request $request)
+    {
+        $request->validate([
+            'qris_image' => 'required|image|mimes:jpeg,jpg,png|max:2048',
+        ]);
+
+        $folder = public_path('images/pembayaran');
+        if (! file_exists($folder)) {
+            mkdir($folder, 0755, true);
+        }
+
+        foreach (glob($folder . '/qris.*') as $file) {
+            @unlink($file);
+        }
+
+        $request->file('qris_image')->move($folder, 'qris.' . $request->file('qris_image')->extension());
+
+        return redirect()->route('admin.payment')->with('success', 'QRIS berhasil diperbarui.');
     }
 
     public function reloadLstm(Request $request)

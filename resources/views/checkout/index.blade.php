@@ -15,39 +15,46 @@
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2">
                             <label class="text-xs text-muted mb-1 block">Nama Lengkap</label>
-                            <input type="text" name="name" value="{{ auth()->user()->name }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm">
+                            <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm">
                         </div>
                         <div>
                             <label class="text-xs text-muted mb-1 block">Nomor Telepon</label>
-                            <input type="tel" name="phone" value="{{ auth()->user()->phone ?? '' }}" required inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
+                            <input type="tel" name="phone" value="{{ old('phone', auth()->user()->phone ?? '') }}" required inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted mb-1 block">Email</label>
+                            <input type="email" name="email" value="{{ old('email') }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="email@domain.com">
                         </div>
                         <div>
                             <label class="text-xs text-muted mb-1 block">Kota</label>
-                            <input type="text" name="city" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Kota Anda">
+                            <input type="text" name="city" value="{{ old('city') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Kota Anda">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="text-xs text-muted mb-1 block">Alamat Lengkap</label>
-                            <textarea name="address" rows="3" required class="input-dark w-full px-4 py-3 rounded-lg text-sm resize-none" placeholder="Jl. ..."></textarea>
+                            <textarea name="address" rows="3" required class="input-dark w-full px-4 py-3 rounded-lg text-sm resize-none" placeholder="Jl. ...">{{ old('address') }}</textarea>
                         </div>
                         <div>
                             <label class="text-xs text-muted mb-1 block">Kode Pos</label>
-                            <input type="text" name="postal" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="60xxx">
+                            <input type="text" name="postal" value="{{ old('postal') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="60xxx">
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-dark-100 border border-dark-300 rounded-xl p-6">
-                    <h3 class="font-display font-semibold text-lg mb-4"><i class="fas fa-credit-card text-gold mr-2"></i>Metode Pembayaran</h3>
-                    <div class="space-y-3">
-                        @php
-                            $payments = ['bca' => 'Transfer Bank BCA', 'mandiri' => 'Transfer Bank Mandiri', 'bri' => 'Transfer Bank BRI', 'gopay' => 'GoPay', 'ovo' => 'OVO', 'dana' => 'DANA'];
-                        @endphp
-                        @foreach($payments as $val => $label)
-                        <label class="flex items-center gap-3 p-3 rounded-lg border border-dark-300 cursor-pointer hover:border-gold-dark transition-colors has-[:checked]:border-gold has-[:checked]:bg-gold/5">
-                            <input type="radio" name="payment" value="{{ $val }}" {{ $loop->first ? 'checked' : '' }} class="accent-[#C8A951]">
-                            <span class="text-sm">{{ $label }}</span>
-                        </label>
-                        @endforeach
+                    <h3 class="font-display font-semibold text-lg mb-4"><i class="fas fa-qrcode text-gold mr-2"></i>Pembayaran QRIS</h3>
+                    <p class="text-sm text-muted mb-4">Scan QRIS berikut, lalu masukkan nominal pembayaran sesuai total pesanan.</p>
+                    <div class="rounded-xl overflow-hidden border border-dark-300 mb-4">
+                        <img src="{{ $qrisImage }}" alt="QRIS Pembayaran" class="w-full object-cover">
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-muted mb-1 block">Total Pesanan</label>
+                            <div class="input-dark w-full px-4 py-3 rounded-lg text-sm bg-dark-200">Rp {{ number_format($total, 0, ',', '.') }}</div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted mb-1 block">Nominal Bayar</label>
+                            <input type="number" name="payment_amount" value="{{ old('payment_amount') ?? $total }}" required min="{{ $total }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Masukkan nominal pembayaran">
+                        </div>
                     </div>
                 </div>
             </div>

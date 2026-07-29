@@ -30,7 +30,9 @@ class CheckoutController extends Controller
             $recommendedContent = $this->fetchContentRecommendations($referenceProduct->name, 4);
         }
 
-        return view('checkout.index', compact('cartItems', 'total', 'recommendedContent'));
+        $qrisImage = $this->qrisImageUrl();
+
+        return view('checkout.index', compact('cartItems', 'total', 'recommendedContent', 'qrisImage'));
     }
 
     public function process(Request $request)
@@ -43,8 +45,12 @@ class CheckoutController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => ['required', 'regex:/^[0-9]{1,15}$/', 'max:15'],
+            'email' => 'nullable|email|max:255',
+            'phone' => ['required','regex:/^[0-9]{1,15}$/', 'max:15'],
+            'city' => 'required|string|max:255',
             'address' => 'required|string|max:1000',
+            'postal' => 'required|string|max:20',
+            'payment_amount' => 'required|numeric|min:1',
             'notes' => 'nullable|string|max:2000',
         ], [
             'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
@@ -69,11 +75,21 @@ class CheckoutController extends Controller
             $total += $item->subtotal;
         }
 
+        if ($request->payment_amount < $total) {
+            return back()->withInput()->with('error', 'Nominal pembayaran harus sama atau lebih besar dari total pesanan. Total minimum Rp ' . number_format($total, 0, ',', '.'));
+        }
+
         $order = Order::create([
             'user_id' => auth()->id(),
             'order_number' => 'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
             'status' => 'pending',
+            'payment_method' => 'qris',
+            'payment_amount' => $request->payment_amount,
             'total_amount' => $total,
+            'shipping_name' => $request->name,
+            'shipping_email' => $request->email,
+            'shipping_phone' => $request->phone,
+            'shipping_city' => $request->city,
             'shipping_address' => $request->address,
             'notes' => $request->notes,
             'ordered_at' => now(),

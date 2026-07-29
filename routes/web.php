@@ -85,6 +85,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::put('/pesanan/{id}', [AdminOrderController::class, 'update'])->name('admin.orders.update');
     Route::delete('/pesanan/{id}', [AdminOrderController::class, 'destroy'])->name('admin.orders.destroy');
     Route::get('/pesanan/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::get('/pembayaran', [AdminController::class, 'payment'])->name('admin.payment');
+    Route::post('/pembayaran', [AdminController::class, 'savePayment'])->name('admin.payment.save');
     Route::get('/lstm', [AdminController::class, 'lstm'])->name('admin.lstm');
     Route::post('/lstm/reload', [AdminController::class, 'reloadLstm'])->name('admin.lstm.reload');
+    Route::get('/history', [AdminController::class, 'history'])->name('admin.history');
 });

@@ -84,11 +84,40 @@ $statusList = [
 
     </div>
 
+
     <div class="mb-4">
         <h3 class="font-medium">Alamat Pengiriman</h3>
         <p class="text-sm text-muted">
             {{ $order->shipping_address }}
         </p>
+
+    <div class="mb-4 grid gap-4 sm:grid-cols-2">
+
+        <div>
+            <h3 class="font-medium">Alamat Pengiriman</h3>
+
+            <p class="text-sm text-muted">
+                {{ $order->shipping_address }}
+            </p>
+        </div>
+
+        <div>
+            <h3 class="font-medium">Pembayaran</h3>
+
+            <p class="text-sm text-muted">
+                {{ strtoupper($order->payment_method) }}
+            </p>
+
+            @if($order->payment_amount)
+                <p class="text-sm text-white font-semibold">
+                    Rp {{ number_format($order->payment_amount, 0, ',', '.') }}
+                </p>
+            @endif
+
+        </div>
+
+    </div>
+
     </div>
 
     <div class="mb-4">

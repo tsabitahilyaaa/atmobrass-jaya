@@ -116,4 +116,18 @@ abstract class Controller extends BaseController
 
         return $recommended;
     }
+
+    protected function qrisImageUrl(): string
+    {
+        $files = ['qris.png', 'qris.jpg', 'qris.jpeg'];
+
+        foreach ($files as $file) {
+            $path = public_path("images/pembayaran/{$file}");
+            if (file_exists($path)) {
+                return asset("images/pembayaran/{$file}");
+            }
+        }
+
+        return asset('images/pembayaran/qris.jpeg');
+    }
 }
