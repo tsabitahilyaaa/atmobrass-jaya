@@ -18,6 +18,10 @@
     <div class="bg-green-100 text-green-800 p-4 rounded-lg mb-6">{{ session('status') }}</div>
 @endif
 
+@if(!empty($error))
+    <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-6">{{ $error }}</div>
+@endif
+
 @if(session('error'))
     <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-6">{{ session('error') }}</div>
 @endif
@@ -87,6 +91,47 @@
     </div>
     <div style="position:relative;height:360px;">
         <canvas id="lstmPredictionChart"></canvas>
+    </div>
+</div>
+@endif
+
+@if($forecast)
+<div class="bg-dark-100 border border-dark-300 rounded-xl p-6 mb-8">
+    <div class="mb-4">
+        <h2 class="font-semibold text-lg">Forecast Multi-Step</h2>
+        <p class="text-sm text-muted">Prediksi produksi per produk untuk 5 bulan ke depan.</p>
+    </div>
+
+    <div class="overflow-x-auto mb-6">
+        <table class="min-w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-dark-200 text-sm uppercase text-muted">
+                    <th class="px-4 py-3 border border-dark-300">Produk</th>
+                    @foreach($forecast['forecast_months'] as $month)
+                        <th class="px-4 py-3 border border-dark-300">{{ $month }}</th>
+                    @endforeach
+                    <th class="px-4 py-3 border border-dark-300">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($forecast['products'] as $item)
+                    <tr>
+                        <td class="px-4 py-3 border border-dark-300">{{ $item['nama_produk'] }}</td>
+                        @foreach($item['monthly'] as $month)
+                            <td class="px-4 py-3 border border-dark-300">{{ number_format($month['prediksi_pcs'], 0, ',', '.') }}</td>
+                        @endforeach
+                        <td class="px-4 py-3 border border-dark-300">{{ number_format($item['total'], 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-6">
+        <h3 class="font-semibold text-lg mb-3">Grafik Forecast Multi-Step</h3>
+        <div style="position:relative;height:360px;">
+            <canvas id="forecastChart"></canvas>
+        </div>
     </div>
 </div>
 @endif
@@ -164,6 +209,46 @@
                                 grid: { color: 'rgba(255,255,255,0.08)', drawBorder: false },
                                 title: { display: true, text: 'Prediksi (pcs)', color: '#d1d5db', font: { size: 12 } }
                             }
+                        }
+                    }
+                });
+            }
+        @endif
+
+        @if($forecast)
+            const forecastLabels = {!! json_encode($forecast['forecast_months']) !!};
+            const forecastTotals = {!! json_encode($forecast['overall']['monthly_total']) !!};
+
+            const forecastCanvas = document.getElementById('forecastChart');
+            if (forecastCanvas) {
+                const ctx = forecastCanvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: forecastLabels,
+                        datasets: [{
+                            label: 'Total Prediksi (pcs)',
+                            data: forecastTotals,
+                            backgroundColor: 'rgba(251,191,36,0.8)',
+                            borderColor: 'rgba(234,179,8,1)',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + new Intl.NumberFormat('id-ID').format(context.parsed.y) + ' pcs';
+                                }
+                            }}
+                        },
+                        scales: {
+                            x: { ticks: { color: '#d1d5db' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: 'rgba(255,255,255,0.05)' } }
                         }
                     }
                 });

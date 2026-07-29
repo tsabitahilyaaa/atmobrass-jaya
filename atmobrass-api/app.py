@@ -4,9 +4,22 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 import os
+import json
+import glob
+import joblib
 
 from tensorflow.keras.models import load_model
 from sklearn.metrics.pairwise import cosine_similarity
+from ml_utils import (
+    build_monthly_pivot,
+    build_product_features,
+    load_dataset,
+    train_model,
+    compute_metrics,
+    recursive_forecast,
+    inverse_transform_prediction,
+    pad_history,
+)
 
 app = Flask(__name__)
 
@@ -18,6 +31,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(SCRIPT_DIR, 'dataset_atmobrass.csv')
 MODEL_PATH = os.path.join(SCRIPT_DIR, 'model_atmobrass.h5')
 LOOKBACK = 60
+default_lookback = LOOKBACK
 
 # Global state for reloadable data and model
 last_reload = None
@@ -30,6 +44,44 @@ dict_nama_produk = {}
 static_features_dict = {}
 num_static_features = 0
 model = None
+product_models = {}
+product_scalers = {}
+product_lookbacks = {}
+static_meta = {}
+
+
+def get_model_related_paths():
+    paths = []
+    if os.path.exists(MODEL_PATH):
+        paths.append(MODEL_PATH)
+
+    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'model_prod_*.h5')))
+    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'scaler_prod_*.pkl')))
+
+    static_meta_path = os.path.join(SCRIPT_DIR, 'static_meta.pkl')
+    if os.path.exists(static_meta_path):
+        paths.append(static_meta_path)
+
+    return paths
+
+
+def get_model_files_mtime():
+    paths = get_model_related_paths()
+    if not paths:
+        return None
+    return max(os.path.getmtime(path) for path in paths)
+
+
+def get_model_lookback(loaded_model):
+    if loaded_model is None:
+        return LOOKBACK
+    try:
+        input_shape = loaded_model.inputs[0].shape
+        if len(input_shape) >= 2 and input_shape[1] is not None:
+            return int(input_shape[1])
+    except Exception:
+        pass
+    return LOOKBACK
 
 
 def load_data_and_model():
@@ -53,24 +105,52 @@ def load_data_and_model():
     kolom_produk = pivot_sales.columns.tolist()
     dict_nama_produk = df.drop_duplicates('ID_Produk').set_index('ID_Produk')['Nama_Produk'].to_dict()
 
-    product_features = df[['ID_Produk', 'Kategori', 'Bahan_Material', 'Warna_Finishing', 'Harga_Rupiah']].drop_duplicates('ID_Produk').set_index('ID_Produk')
-    encoder = OneHotEncoder(sparse_output=False)
-    encoded_cats = encoder.fit_transform(product_features[['Kategori', 'Bahan_Material', 'Warna_Finishing']])
+    static_meta_path = os.path.join(SCRIPT_DIR, 'static_meta.pkl')
+    if os.path.exists(static_meta_path):
+        static_meta = joblib.load(static_meta_path)
+        static_features_dict = static_meta.get('static_vectors', {})
+        if 'product_names' in static_meta:
+            dict_nama_produk.update(static_meta['product_names'])
+    else:
+        product_features = df[['ID_Produk', 'Kategori', 'Bahan_Material', 'Warna_Finishing', 'Harga_Rupiah']].drop_duplicates('ID_Produk').set_index('ID_Produk')
+        try:
+            encoder = OneHotEncoder(sparse_output=False)
+        except TypeError:
+            encoder = OneHotEncoder(sparse=False)
+        encoded_cats = encoder.fit_transform(product_features[['Kategori', 'Bahan_Material', 'Warna_Finishing']])
 
-    scaler_harga = MinMaxScaler()
-    scaled_harga = scaler_harga.fit_transform(product_features[['Harga_Rupiah']])
+        scaler_harga = MinMaxScaler()
+        scaled_harga = scaler_harga.fit_transform(product_features[['Harga_Rupiah']])
 
-    static_features_dict = {}
-    for i, prod_id in enumerate(product_features.index):
-        static_features_dict[prod_id] = np.concatenate([encoded_cats[i], scaled_harga[i]])
+        static_features_dict = {}
+        for i, prod_id in enumerate(product_features.index):
+            static_features_dict[prod_id] = np.concatenate([encoded_cats[i], scaled_harga[i]])
 
-    num_static_features = static_features_dict[product_features.index[0]].shape[0]
+    num_static_features = next(iter(static_features_dict.values())).shape[0] if static_features_dict else 0
 
-    model = load_model(MODEL_PATH, compile=False)
+    product_models.clear()
+    product_scalers.clear()
+    product_lookbacks.clear()
+
+    model_files = glob.glob(os.path.join(SCRIPT_DIR, 'model_prod_*.h5'))
+    if model_files:
+        for path in model_files:
+            prod_id = os.path.splitext(os.path.basename(path))[0].replace('model_prod_', '')
+            loaded_model = load_model(path, compile=False)
+            product_models[prod_id] = loaded_model
+            scaler_path = os.path.join(SCRIPT_DIR, f'scaler_prod_{prod_id}.pkl')
+            if os.path.exists(scaler_path):
+                product_scalers[prod_id] = joblib.load(scaler_path)
+            product_lookbacks[prod_id] = get_model_lookback(loaded_model)
+        print(f"[INFO] Loaded {len(product_models)} product-specific models.")
+        model = None
+    else:
+        model = load_model(MODEL_PATH, compile=False)
+        default_lookback = get_model_lookback(model)
 
     last_reload = pd.Timestamp.now()
     data_mtime = os.path.getmtime(DATA_PATH)
-    model_mtime = os.path.getmtime(MODEL_PATH)
+    model_mtime = get_model_files_mtime()
     print(f"[INFO] Reload lengkap: {last_reload}")
 
 
@@ -96,12 +176,244 @@ def maybe_reload():
             load_data_and_model()
             return
 
+        current_model_mtime = get_model_files_mtime()
+        if data_mtime is None or model_mtime is None:
+            load_data_and_model()
+            return
+
         if current_data_mtime != data_mtime or current_model_mtime != model_mtime:
             load_data_and_model()
     except FileNotFoundError as e:
         print(f"[WARN] File tidak ditemukan saat reload: {e}")
     except Exception as e:
         print(f"[WARN] Gagal memeriksa reload: {e}")
+
+
+def build_month_label(date):
+    return date.strftime('%Y-%m')
+
+
+def build_indonesian_month_label(date):
+    nama_bulan = {
+        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+        5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+        9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+    }
+    return f"{nama_bulan.get(date.month, date.strftime('%B'))} {date.year}"
+
+
+def get_product_model_and_scaler(prod_id):
+    if prod_id in product_models:
+        return (
+            product_models[prod_id],
+            product_scalers.get(prod_id, None),
+            product_lookbacks.get(prod_id, default_lookback),
+        )
+    return model, scaler_qty, default_lookback
+
+
+def evaluate_model_on_2025(epochs=60, batch_size=16):
+    df = load_dataset(DATA_PATH)
+    pivot = build_monthly_pivot(df)
+    train_pivot = pivot.loc['2021-01-01':'2024-12-31']
+    test_pivot = pivot.loc['2025-01-01':'2025-12-31']
+
+    if train_pivot.empty or test_pivot.empty:
+        raise ValueError('Data untuk evaluasi tidak mencukupi. Pastikan dataset mencapai 2025.')
+
+    static_features, _, _, _ = build_product_features(df)
+
+    need_fallback_model = model is not None or any(prod_id not in product_models for prod_id in train_pivot.columns.tolist())
+    eval_model = None
+    eval_scaler = None
+    eval_lookback = LOOKBACK
+
+    if need_fallback_model:
+        eval_lookback = min(LOOKBACK, len(train_pivot) - 1)
+        if eval_lookback < 1:
+            raise ValueError('Panjang data pelatihan tidak mencukupi untuk melakukan evaluasi backtest.')
+        if eval_lookback != LOOKBACK:
+            print(f"[WARN] Lookback disesuaikan menjadi {eval_lookback} untuk evaluasi karena data pelatihan hanya {len(train_pivot)} bulan.")
+
+        eval_model, eval_scaler = train_model(
+            train_pivot,
+            static_features,
+            eval_lookback,
+            epochs=epochs,
+            batch_size=batch_size,
+            val_split=0.1,
+        )
+
+    months = [build_month_label(m) for m in test_pivot.index]
+    monthly_total_actual = [0.0] * len(months)
+    monthly_total_predicted = [0.0] * len(months)
+    monthly_abs_error = [0.0] * len(months)
+
+    overall_actual = []
+    overall_predicted = []
+    product_summary = []
+    trend_actual = [0.0] * len(months)
+    trend_predicted = [0.0] * len(months)
+
+    for prod_idx, prod_id in enumerate(train_pivot.columns.tolist()):
+        if prod_id not in static_features:
+            continue
+
+        if prod_id in product_models:
+            prod_model, prod_scaler, prod_lookback = get_product_model_and_scaler(prod_id)
+            actual_series = train_pivot[prod_id].fillna(0).astype(float).values.reshape(-1, 1)
+            history_scaled = prod_scaler.transform(actual_series).flatten().tolist()
+            predictions = recursive_forecast(
+                prod_model,
+                history_scaled,
+                np.asarray(static_features[prod_id], dtype=np.float32),
+                prod_scaler,
+                0,
+                prod_lookback,
+                len(months),
+            )
+        elif model is not None:
+            history_scaled = scaler_qty.transform(train_pivot)[:, prod_idx].tolist()
+            prod_lookback = LOOKBACK
+            predictions = recursive_forecast(
+                model,
+                history_scaled,
+                np.asarray(static_features[prod_id], dtype=np.float32),
+                scaler_qty,
+                prod_idx,
+                prod_lookback,
+                len(months),
+            )
+        elif eval_model is not None:
+            history_scaled = eval_scaler.transform(train_pivot)[:, prod_idx].tolist()
+            predictions = recursive_forecast(
+                eval_model,
+                history_scaled,
+                np.asarray(static_features[prod_id], dtype=np.float32),
+                eval_scaler,
+                prod_idx,
+                eval_lookback,
+                len(months),
+            )
+        else:
+            raise ValueError(f'Tidak ada model yang tersedia untuk produk {prod_id} saat evaluasi backtest.')
+
+        actuals = test_pivot[prod_id].fillna(0).astype(float).tolist()
+        metrics = compute_metrics(actuals, predictions)
+
+        sum_actual = float(sum(actuals))
+        sum_predicted = float(sum(predictions))
+        sum_error = float(sum(abs(np.asarray(predictions) - np.asarray(actuals))))
+
+        for idx, value in enumerate(actuals):
+            trend_actual[idx] += value
+            trend_predicted[idx] += predictions[idx]
+            monthly_total_actual[idx] += value
+            monthly_total_predicted[idx] += predictions[idx]
+            monthly_abs_error[idx] += abs(predictions[idx] - value)
+
+        overall_actual.extend(actuals)
+        overall_predicted.extend(predictions)
+
+        product_summary.append({
+            'id_produk': str(prod_id),
+            'nama_produk': dict_nama_produk.get(prod_id, str(prod_id)),
+            'aktual_total': sum_actual,
+            'prediksi_total': sum_predicted,
+            'error_total': sum_error,
+            'mae': metrics['mae'],
+            'mse': metrics['mse'],
+            'rmse': metrics['rmse'],
+            'mape': metrics['mape'],
+            'actual_series': actuals,
+            'predicted_series': predictions,
+        })
+
+    total_metrics = compute_metrics(overall_actual, overall_predicted)
+    monthly_summary = []
+    product_count = len(product_summary) if len(product_summary) > 0 else 1
+
+    for idx, month in enumerate(months):
+        monthly_summary.append({
+            'month': month,
+            'actual': monthly_total_actual[idx],
+            'predicted': monthly_total_predicted[idx],
+            'error': monthly_abs_error[idx] / product_count,
+        })
+
+    conclusion = (
+        f"Model menghasilkan MAPE sebesar {total_metrics['mape']:.2f}%, "
+        f"sehingga tingkat akurasi model sebesar {max(0.0, 100.0 - total_metrics['mape']):.2f}%.")
+
+    return {
+        'months': months,
+        'overall': total_metrics,
+        'conclusion': conclusion,
+        'product_summary': product_summary,
+        'monthly_summary': monthly_summary,
+        'trend': {
+            'actual': trend_actual,
+            'predicted': trend_predicted,
+        }
+    }
+
+
+def forecast_future_steps(steps=5):
+    if pivot_sales is None or (model is None and not product_models):
+        raise ValueError('Model atau data belum dimuat. Silakan reload terlebih dahulu.')
+
+    if steps < 1:
+        steps = 5
+    if steps > 12:
+        steps = 12
+
+    last_month = pivot_sales.index.max()
+    forecast_months = [
+        build_indonesian_month_label(last_month + pd.DateOffset(months=i))
+        for i in range(1, steps + 1)
+    ]
+
+    scaled_sales = scaler_qty.transform(pivot_sales)
+    overall_month_totals = [0.0] * steps
+    forecast_products = []
+
+    for prod_idx, prod_id in enumerate(kolom_produk):
+        history_scaled = scaled_sales[:, prod_idx].tolist()
+        prod_model, prod_scaler, prod_lookback = get_product_model_and_scaler(prod_id)
+        predictions = recursive_forecast(
+            prod_model,
+            history_scaled,
+            static_features_dict[prod_id].reshape(1, -1),
+            prod_scaler,
+            0 if prod_scaler is not scaler_qty else prod_idx,
+            prod_lookback,
+            steps,
+        )
+
+        monthly_values = []
+        for idx, value in enumerate(predictions):
+            monthly_values.append({
+                'month': forecast_months[idx],
+                'prediksi_pcs': int(np.ceil(value)),
+                'quantity': float(value),
+            })
+            overall_month_totals[idx] += float(value)
+
+        forecast_products.append({
+            'id_produk': str(prod_id),
+            'nama_produk': dict_nama_produk.get(prod_id, str(prod_id)),
+            'monthly': monthly_values,
+            'total': int(np.ceil(sum(predictions))),
+        })
+
+    return {
+        'forecast_months': forecast_months,
+        'products': forecast_products,
+        'overall': {
+            'monthly_total': [int(np.ceil(v)) for v in overall_month_totals],
+            'total_forecast': int(np.ceil(sum(overall_month_totals))),
+        }
+    }
 
 
 load_data_and_model()
@@ -113,17 +425,28 @@ def predict_produksi():
         hasil_prediksi = []
 
         scaled_sales = scaler_qty.transform(pivot_sales)
-        data_lookback = scaled_sales[-LOOKBACK:]
+        max_lookback = max([product_lookbacks.get(pid, default_lookback) for pid in kolom_produk] + [default_lookback])
+        recent_sales = scaled_sales[-max_lookback:]
 
         for j, prod_id in enumerate(kolom_produk):
-            input_waktu_pred = data_lookback[:, j].reshape(1, LOOKBACK, 1)
+            prod_model, prod_scaler, prod_lookback = get_product_model_and_scaler(prod_id)
+            history_values = recent_sales[:, j]
+            if len(history_values) < prod_lookback:
+                padded_history = np.concatenate([np.zeros(prod_lookback - len(history_values)), history_values])
+            else:
+                padded_history = history_values[-prod_lookback:]
+
+            input_waktu_pred = padded_history.reshape(1, prod_lookback, 1)
             input_fitur_pred = static_features_dict[prod_id].reshape(1, -1)
 
-            pred_skala = model.predict({'input_waktu': input_waktu_pred, 'input_fitur': input_fitur_pred}, verbose=0)
+            pred_skala = prod_model.predict({'input_waktu': input_waktu_pred, 'input_fitur': input_fitur_pred}, verbose=0)
 
-            dummy_array = np.zeros((1, len(kolom_produk)))
-            dummy_array[0, j] = pred_skala[0][0]
-            prediksi_asli = scaler_qty.inverse_transform(dummy_array)[0, j]
+            if prod_scaler is scaler_qty:
+                dummy_array = np.zeros((1, len(kolom_produk)))
+                dummy_array[0, j] = pred_skala[0][0]
+                prediksi_asli = scaler_qty.inverse_transform(dummy_array)[0, j]
+            else:
+                prediksi_asli = prod_scaler.inverse_transform([[pred_skala[0][0]]])[0, 0]
 
             jumlah_produksi = int(np.ceil(prediksi_asli))
             jumlah_produksi = max(0, jumlah_produksi)
@@ -353,6 +676,48 @@ def get_products_timeseries():
         import traceback
         traceback.print_exc()
         return jsonify({'status': 'error', 'pesan': str(e)}), 500
+
+
+@app.route('/api/evaluate', methods=['GET'])
+def evaluate_model():
+    try:
+        maybe_reload()
+        epochs = int(request.args.get('epochs', 60))
+        batch_size = int(request.args.get('batch_size', 16))
+
+        evaluation = evaluate_model_on_2025(epochs=epochs, batch_size=batch_size)
+        return jsonify({
+            'status': 'success',
+            'data': evaluation
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] Evaluate endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'pesan': f"Gagal melakukan evaluasi model: {str(e)}"
+        }), 500
+
+
+@app.route('/api/forecast', methods=['GET'])
+def forecast_model():
+    try:
+        maybe_reload()
+        steps = int(request.args.get('steps', 5))
+        forecast = forecast_future_steps(steps=steps)
+        return jsonify({
+            'status': 'success',
+            'data': forecast
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] Forecast endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'pesan': f"Gagal melakukan forecast: {str(e)}"
+        }), 500
 
 
 if __name__ == '__main__':

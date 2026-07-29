@@ -2,6 +2,7 @@
  $r = Request::path();
  $dash = $r === 'admin';
  $prods = str_contains($r, 'admin/produk');
+ $pay = str_contains($r, 'admin/pembayaran');
  $lstm = str_contains($r, 'admin/lstm');
  $history = str_contains($r, 'admin/history');
  $msgs = str_contains($r, 'admin/pesan');
@@ -32,6 +33,9 @@
         </a>
         <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $msgs ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-envelope-open-text w-5"></i>Pesan
+        </a>
+        <a href="{{ route('admin.payment') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $pay ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-qrcode w-5"></i>Pembayaran
         </a>
         <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $ords ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-shopping-bag w-5"></i>Pesanan

@@ -13,6 +13,84 @@
     <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-6">{{ session('error') }}</div>
 @endif
 
+<div class="mb-6">
+    <div class="inline-flex rounded-lg bg-dark-200 border border-dark-300 overflow-hidden">
+        <button id="tabEvaluationBtn" class="px-4 py-2 font-semibold text-sm text-white bg-dark-400 hover:bg-dark-300 transition focus:outline-none">Backtest 2025</button>
+        <button id="tabHistoryBtn" class="px-4 py-2 font-semibold text-sm text-white bg-dark-200 hover:bg-dark-300 transition focus:outline-none">Riwayat Penjualan</button>
+    </div>
+</div>
+
+@if(isset($evaluationError) && $evaluationError)
+    <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-6">{{ $evaluationError }}</div>
+@endif
+
+<div id="evaluationTab" class="space-y-6">
+@if(isset($evaluation) && $evaluation)
+<div class="bg-dark-100 border border-dark-300 rounded-xl p-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div>
+            <h2 class="font-semibold text-lg text-white mb-1">Backtest Evaluasi 2025</h2>
+            <p class="text-sm text-muted">Laporan evaluasi model LSTM dibandingkan data aktual periode 2025.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-dark-200 border border-dark-300 rounded-lg p-4">
+            <p class="text-sm text-muted mb-1">MAE</p>
+            <p class="text-2xl font-bold text-gold">{{ number_format($evaluation['overall']['mae'], 2, ',', '.') }}</p>
+        </div>
+        <div class="bg-dark-200 border border-dark-300 rounded-lg p-4">
+            <p class="text-sm text-muted mb-1">MSE</p>
+            <p class="text-2xl font-bold text-gold">{{ number_format($evaluation['overall']['mse'], 2, ',', '.') }}</p>
+        </div>
+        <div class="bg-dark-200 border border-dark-300 rounded-lg p-4">
+            <p class="text-sm text-muted mb-1">RMSE</p>
+            <p class="text-2xl font-bold text-gold">{{ number_format($evaluation['overall']['rmse'], 2, ',', '.') }}</p>
+        </div>
+        <div class="bg-dark-200 border border-dark-300 rounded-lg p-4">
+            <p class="text-sm text-muted mb-1">MAPE</p>
+            <p class="text-2xl font-bold text-gold">{{ number_format($evaluation['overall']['mape'], 2, ',', '.') }}%</p>
+        </div>
+    </div>
+
+    <div class="mb-6 text-sm text-muted">{{ $evaluation['conclusion'] }}</div>
+
+    <div class="overflow-x-auto mb-6">
+        <table class="min-w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-dark-200 text-sm uppercase text-muted">
+                    <th class="px-4 py-3 border border-dark-300">Produk</th>
+                    <th class="px-4 py-3 border border-dark-300">Aktual Total</th>
+                    <th class="px-4 py-3 border border-dark-300">Prediksi Total</th>
+                    <th class="px-4 py-3 border border-dark-300">MAE</th>
+                    <th class="px-4 py-3 border border-dark-300">MAPE</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($evaluation['product_summary'] as $item)
+                    <tr>
+                        <td class="px-4 py-3 border border-dark-300">{{ $item['nama_produk'] }}</td>
+                        <td class="px-4 py-3 border border-dark-300">{{ number_format($item['aktual_total'], 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 border border-dark-300">{{ number_format($item['prediksi_total'], 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 border border-dark-300">{{ number_format($item['mae'], 2, ',', '.') }}</td>
+                        <td class="px-4 py-3 border border-dark-300">{{ number_format($item['mape'], 2, ',', '.') }}%</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-6">
+        <h3 class="font-semibold text-lg mb-3">Grafik Aktual vs Prediksi 2025</h3>
+        <div style="position:relative;height:360px;">
+            <canvas id="evaluationChart"></canvas>
+        </div>
+    </div>
+</div>
+@endif
+</div>
+
+<div id="historyTab" class="space-y-6 hidden">
 @if(isset($productsData) && $productsData && $productsData['status'] === 'success')
 <div class="bg-dark-100 border border-dark-300 rounded-xl p-6 mb-8">
     <div class="flex items-center justify-between mb-6">
@@ -66,6 +144,7 @@
         <i class="fas fa-exclamation-circle mr-2"></i>Data produk tidak tersedia.
     </div>
 @endif
+</div>
 
 @endsection
 
@@ -209,6 +288,89 @@
         productSelect.addEventListener('change', function() {
             initChartForProduct(this.value);
         });
+
+        @if(isset($evaluation) && $evaluation)
+            const evaluationLabels = {!! json_encode($evaluation['months']) !!};
+            const evaluationActual = {!! json_encode($evaluation['trend']['actual']) !!};
+            const evaluationPredicted = {!! json_encode($evaluation['trend']['predicted']) !!};
+
+            const evaluationCanvas = document.getElementById('evaluationChart');
+            if (evaluationCanvas) {
+                const ctxEval = evaluationCanvas.getContext('2d');
+                new Chart(ctxEval, {
+                    type: 'line',
+                    data: {
+                        labels: evaluationLabels,
+                        datasets: [
+                            {
+                                label: 'Aktual 2025',
+                                data: evaluationActual,
+                                borderColor: 'rgba(34,197,94,1)',
+                                backgroundColor: 'rgba(34,197,94,0.15)',
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 3,
+                                borderWidth: 2,
+                            },
+                            {
+                                label: 'Prediksi 2025',
+                                data: evaluationPredicted,
+                                borderColor: 'rgba(59,130,246,1)',
+                                backgroundColor: 'rgba(59,130,246,0.15)',
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 3,
+                                borderWidth: 2,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#d1d5db' } },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#d1d5db' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        }
+                    }
+                });
+            }
+        @endif
+
+        const tabEvaluationBtn = document.getElementById('tabEvaluationBtn');
+        const tabHistoryBtn = document.getElementById('tabHistoryBtn');
+        const evaluationTab = document.getElementById('evaluationTab');
+        const historyTab = document.getElementById('historyTab');
+
+        function activateTab(tabName) {
+            if (tabName === 'evaluation') {
+                evaluationTab.classList.remove('hidden');
+                historyTab.classList.add('hidden');
+                tabEvaluationBtn.classList.add('bg-dark-400');
+                tabEvaluationBtn.classList.remove('bg-dark-200');
+                tabHistoryBtn.classList.add('bg-dark-200');
+                tabHistoryBtn.classList.remove('bg-dark-400');
+            } else {
+                evaluationTab.classList.add('hidden');
+                historyTab.classList.remove('hidden');
+                tabEvaluationBtn.classList.add('bg-dark-200');
+                tabEvaluationBtn.classList.remove('bg-dark-400');
+                tabHistoryBtn.classList.add('bg-dark-400');
+                tabHistoryBtn.classList.remove('bg-dark-200');
+            }
+        }
+
+        tabEvaluationBtn.addEventListener('click', function () {
+            activateTab('evaluation');
+        });
+        tabHistoryBtn.addEventListener('click', function () {
+            activateTab('history');
+        });
+
+        activateTab('{{ isset($evaluation) && $evaluation ? 'evaluation' : 'history' }}');
     });
 </script>
 @endpush

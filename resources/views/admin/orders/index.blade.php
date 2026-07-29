@@ -47,7 +47,8 @@
             <div class="text-xs text-muted flex flex-wrap gap-4">
                 <span><i class="fas fa-map-marker-alt mr-1 text-gold"></i>{{ $order->shipping_address }}, {{ $order->shipping_city }}</span>
                 <span><i class="fas fa-phone mr-1 text-gold"></i>{{ $order->shipping_phone }}</span>
-                <span><i class="fas fa-credit-card mr-1 text-gold"></i>{{ strtoupper($order->payment_method) }}</span>
+                <span><i class="fas fa-qrcode mr-1 text-gold"></i>QRIS</span>
+                <span><i class="fas fa-money-bill-wave mr-1 text-gold"></i>Rp {{ number_format($order->payment_amount ?? $order->total_amount, 0, ',', '.') }}</span>
             </div>
         </a>
         @endforeach
