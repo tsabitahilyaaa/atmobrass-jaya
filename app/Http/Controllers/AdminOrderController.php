@@ -24,10 +24,12 @@ class AdminOrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:pending,dibayar,dikirim,selesai',
+            'status' => 'required|in:pending,paid,processing,shipped,completed,cancelled',
         ]);
 
-        $order->update(['status' => $request->input('status')]);
+        $order->update([
+        'status' => $request->status,
+    ]);
 
         return back()->with('success', 'Status pesanan diperbarui.');
     }
