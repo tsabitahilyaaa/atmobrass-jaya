@@ -11,32 +11,51 @@
         <div class="grid lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-dark-100 border border-dark-300 rounded-xl p-6">
-                    <h3 class="font-display font-semibold text-lg mb-4"><i class="fas fa-map-marker-alt text-gold mr-2"></i>Alamat Pengiriman</h3>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div class="sm:col-span-2">
-                            <label class="text-xs text-muted mb-1 block">Nama Lengkap</label>
-                            <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <h3 class="font-display font-semibold text-lg"><i class="fas fa-map-marker-alt text-gold mr-2"></i>Alamat Pengiriman</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('profile.addresses.create') }}" class="btn-gold px-4 py-3 rounded-full text-xs sm:text-sm">Tambah Alamat</a>
+                            <a href="{{ route('profile.addresses') }}" class="btn-outline px-4 py-3 rounded-full text-xs sm:text-sm">Kelola Alamat</a>
                         </div>
-                        <div>
-                            <label class="text-xs text-muted mb-1 block">Nomor Telepon</label>
-                            <input type="tel" name="phone" value="{{ old('phone', auth()->user()->phone ?? '') }}" required inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
+                    </div>
+
+                    @if($addresses->isEmpty())
+                        <div class="bg-dark-200 border border-dashed border-dark-300 rounded-2xl p-6 text-center">
+                            <p class="text-sm text-muted mb-3">Belum ada alamat tersimpan.</p>
+                            <a href="{{ route('profile.addresses.create') }}" class="btn-gold px-5 py-3 rounded-full text-sm">Tambah Alamat</a>
                         </div>
-                        <div>
-                            <label class="text-xs text-muted mb-1 block">Email</label>
-                            <input type="email" name="email" value="{{ old('email') }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="email@domain.com">
+                    @else
+                        <div class="space-y-3">
+                            @foreach($addresses as $address)
+                                <label class="block cursor-pointer">
+                                    <input type="radio" name="address_id" value="{{ $address->id }}" class="peer sr-only" {{ old('address_id', $defaultAddress?->id) == $address->id ? 'checked' : '' }}>
+                                    <div class="bg-dark-200 border border-dark-300 rounded-2xl p-4 transition-all duration-200 peer-checked:border-gold peer-checked:ring-1 peer-checked:ring-gold hover:border-gold/70">
+                                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <p class="font-semibold text-sm">{{ $address->recipient_name }}</p>
+                                                    @if($address->is_default)
+                                                        <span class="text-gold text-[10px] uppercase tracking-[0.24em]">Utama</span>
+                                                    @endif
+                                                </div>
+                                                <p class="text-sm text-muted mt-1">{{ $address->phone }}</p>
+                                                <p class="text-sm text-muted mt-2 leading-relaxed">{{ $address->address }}, {{ $address->city }}, {{ $address->province }}, {{ $address->postal_code }}</p>
+                                            </div>
+                                            <div class="text-xs text-muted">Pilih alamat ini</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endforeach
                         </div>
-                        <div>
-                            <label class="text-xs text-muted mb-1 block">Kota</label>
-                            <input type="text" name="city" value="{{ old('city') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Kota Anda">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="text-xs text-muted mb-1 block">Alamat Lengkap</label>
-                            <textarea name="address" rows="3" required class="input-dark w-full px-4 py-3 rounded-lg text-sm resize-none" placeholder="Jl. ...">{{ old('address') }}</textarea>
-                        </div>
-                        <div>
-                            <label class="text-xs text-muted mb-1 block">Kode Pos</label>
-                            <input type="text" name="postal" value="{{ old('postal') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="60xxx">
-                        </div>
+                    @endif
+
+                    @error('address_id')
+                        <p class="text-sm text-red-400 mt-3">{{ $message }}</p>
+                    @enderror
+
+                    <div class="mt-4">
+                        <label class="text-xs text-muted mb-1 block">Email</label>
+                        <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="email@domain.com">
                     </div>
                 </div>
 

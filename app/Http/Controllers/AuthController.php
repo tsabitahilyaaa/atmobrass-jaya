@@ -60,14 +60,12 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
-            'phone' => $validated['phone'] ?? null,
             'role' => 'customer',
         ]);
 

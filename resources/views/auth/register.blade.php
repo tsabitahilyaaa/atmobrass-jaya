@@ -24,10 +24,6 @@
             <input type="email" name="email" value="{{ old('email') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="email@contoh.com">
         </div>
         <div>
-            <label class="text-xs text-muted mb-1 block">No. Telepon</label>
-            <input type="tel" name="phone" value="{{ old('phone') }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
-        </div>
-        <div>
             <label class="text-xs text-muted mb-1 block">Password</label>
             <input type="password" name="password" required minlength="6" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Minimal 6 karakter">
         </div>

@@ -232,10 +232,15 @@ body {
     }
 }
 
-.status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+..status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+.status-paid { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.status-processing { background: rgba(168,85,247,0.15); color: #a855f7; }
+.status-shipped { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+.status-completed { background: rgba(34,197,94,0.15); color: #22c55e; }
 .status-dibayar { background: rgba(59,130,246,0.15); color: #3b82f6; }
 .status-dikirim { background: rgba(168,85,247,0.15); color: #a855f7; }
 .status-selesai { background: rgba(34,197,94,0.15); color: #22c55e; }
+.status-cancelled { background: rgba(248,113,113,0.15); color: #f87171; }
 
 .line-clamp-2 {
     display: -webkit-box;

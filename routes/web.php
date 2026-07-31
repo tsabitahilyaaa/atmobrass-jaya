@@ -15,6 +15,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProduksiController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman publik
@@ -59,7 +61,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/riwayat-pesanan', [OrderController::class, 'index'])->name('orders.index');
-});
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
+    Route::get('/profil/pesanan', [ProfileController::class, 'index'])->name('profile.orders');
+    Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profil/password', [ProfileController::class, 'password'])->name('profile.password');
+    Route::put('/profil/password', [ProfileController::class, 'passwordUpdate'])->name('profile.password.update');
+
+    Route::get('/profil/alamat', [AddressController::class, 'index'])->name('profile.addresses');
+    Route::get('/profil/alamat/tambah', [AddressController::class, 'create'])->name('profile.addresses.create');
+    Route::post('/profil/alamat', [AddressController::class, 'store'])->name('profile.addresses.store');
+    Route::get('/profil/alamat/{address}/edit', [AddressController::class, 'edit'])->name('profile.addresses.edit');
+    Route::put('/profil/alamat/{address}', [AddressController::class, 'update'])->name('profile.addresses.update');
+    Route::delete('/profil/alamat/{address}', [AddressController::class, 'destroy'])->name('profile.addresses.destroy');
+    Route::put('/profil/alamat/{address}/utama', [AddressController::class, 'setDefault'])->name('profile.addresses.default');
+
+    Route::get('/profil/pesanan/{order}', [ProfileController::class, 'show'])->name('profile.orders.show');
+    Route::post('/profil/pesanan/{order}/beli-lagi', [ProfileController::class, 'reorder'])->name('profile.orders.reorder');});
 
 // =========================
 // AUTH ADMIN
