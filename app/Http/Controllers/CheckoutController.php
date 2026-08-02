@@ -63,8 +63,16 @@ class CheckoutController extends Controller
             'address_id' => 'required|exists:addresses,id',
             'email' => 'nullable|email|max:255',
             'payment_amount' => 'required|numeric|min:1',
+            'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:5120',
             'notes' => 'nullable|string|max:2000',
         ]);
+
+        $paymentProof = null;
+
+        if ($request->hasFile('payment_proof')) {
+            $paymentProof = $request->file('payment_proof')
+                ->store('payment-proofs', 'public');
+        }
 
         $selectedAddress = auth()->user()->addresses()->find($request->address_id);
 
@@ -102,6 +110,8 @@ class CheckoutController extends Controller
             'status' => 'pending',
             'payment_method' => 'qris',
             'payment_amount' => $request->payment_amount,
+            'payment_proof' => $paymentProof,
+            'payment_status' => 'pending',
             'total_amount' => $total,
             'shipping_name' => $selectedAddress->recipient_name,
             'shipping_email' => $request->email,

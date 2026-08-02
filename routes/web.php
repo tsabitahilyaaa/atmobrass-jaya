@@ -104,6 +104,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/pesan', [AdminMessageController::class, 'index'])->name('admin.messages.index');
     Route::get('/pesanan', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::put('/pesanan/{id}', [AdminOrderController::class, 'update'])->name('admin.orders.update');
+    Route::patch('/pesanan/{id}/verify', [AdminOrderController::class, 'verify'])->name('admin.orders.verify');
+    Route::patch('/pesanan/{id}/reject', [AdminOrderController::class, 'reject'])->name('admin.orders.reject');
     Route::delete('/pesanan/{id}', [AdminOrderController::class, 'destroy'])->name('admin.orders.destroy');
     Route::get('/pesanan/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::get('/pembayaran', [AdminController::class, 'payment'])->name('admin.payment');
