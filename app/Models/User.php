@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasMany(Address::class);
     }
 
+    public function preferences()
+    {
+        return $this->hasMany(UserPreference::class);
+    }
+
     // =========================
     // HELPER METHODS
     // =========================

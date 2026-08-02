@@ -18,6 +18,7 @@
         <div class="flex flex-wrap gap-3">
             <a href="{{ route('profile.edit') }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Edit Profil</a>
             <a href="{{ route('profile.password') }}" class="btn-gold px-6 py-3 rounded-lg text-sm inline-block">Ubah Password</a>
+            <a href="{{ route('profile.preferences') }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Preferensi Saya</a>
         </div>
     </div>
 
