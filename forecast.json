@@ -1,0 +1,440 @@
+﻿{
+    "data":  {
+                 "forecast_months":  [
+                                         "Agustus 2026",
+                                         "September 2026",
+                                         "Oktober 2026",
+                                         "November 2026",
+                                         "Desember 2026"
+                                     ],
+                 "overall":  {
+                                 "monthly_total":  [
+                                                       168,
+                                                       127,
+                                                       212,
+                                                       74,
+                                                       63
+                                                   ],
+                                 "total_forecast":  642
+                             },
+                 "products":  [
+                                  {
+                                      "id_produk":  "HW-001",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.42324161529541
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.879669189453125
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.6219024658203125
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.3097758293151855
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Accecoris Katak",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-002",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.027557373046875
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.738380432128906
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.544290542602539
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.396885395050049
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Bintang",
+                                      "total":  49
+                                  },
+                                  {
+                                      "id_produk":  "HW-003",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.538174629211426
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.86646270751953
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.6219024658203125
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.40818977355957
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Engsel Jahit",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-004",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.027557373046875
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.86646270751953
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.544290542602539
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.974597454071045
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Engsel Kepala Antiq",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-005",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  12,
+                                                          "quantity":  11.726051330566406
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  15,
+                                                          "quantity":  14.64853286743164
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.984824180603027
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.272896766662598
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Engsel Tombak",
+                                      "total":  51
+                                  },
+                                  {
+                                      "id_produk":  "HW-006",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.42324161529541
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.738380432128906
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.6219024658203125
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.3097758293151855
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Handle Arsip Kuningan",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-007",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  12,
+                                                          "quantity":  11.759005546569824
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  11,
+                                                          "quantity":  10.254009246826172
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  14,
+                                                          "quantity":  13.869564056396484
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  7,
+                                                          "quantity":  6.880661487579346
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.264678955078125
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Handle Kuningan",
+                                      "total":  49
+                                  },
+                                  {
+                                      "id_produk":  "HW-008",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  12,
+                                                          "quantity":  11.666183471679688
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  15,
+                                                          "quantity":  14.609418869018555
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.984824180603027
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.272896766662598
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Handle Laci",
+                                      "total":  51
+                                  },
+                                  {
+                                      "id_produk":  "HW-009",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.027557373046875
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.879669189453125
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.544290542602539
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.061707019805908
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Handle Peti",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-010",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  15,
+                                                          "quantity":  14.101188659667969
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.67443561553955
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.322044372558594
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.552132606506348
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.1159162521362305
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Hanger Kapstok",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-011",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.027557373046875
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.879669189453125
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.544290542602539
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.0671186447143555
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Kotak Kuningan",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-012",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.027557373046875
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.898517608642578
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.544290542602539
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.974597454071045
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Roda Troli Alumunium",
+                                      "total":  50
+                                  },
+                                  {
+                                      "id_produk":  "HW-013",
+                                      "monthly":  [
+                                                      {
+                                                          "month":  "Agustus 2026",
+                                                          "prediksi_pcs":  13,
+                                                          "quantity":  12.911300659179688
+                                                      },
+                                                      {
+                                                          "month":  "September 2026",
+                                                          "prediksi_pcs":  10,
+                                                          "quantity":  9.42324161529541
+                                                      },
+                                                      {
+                                                          "month":  "Oktober 2026",
+                                                          "prediksi_pcs":  17,
+                                                          "quantity":  16.879669189453125
+                                                      },
+                                                      {
+                                                          "month":  "November 2026",
+                                                          "prediksi_pcs":  6,
+                                                          "quantity":  5.6219024658203125
+                                                      },
+                                                      {
+                                                          "month":  "Desember 2026",
+                                                          "prediksi_pcs":  5,
+                                                          "quantity":  4.3097758293151855
+                                                      }
+                                                  ],
+                                      "nama_produk":  "Roda Troli Kuningan",
+                                      "total":  50
+                                  }
+                              ]
+             },
+    "status":  "success"
+}
