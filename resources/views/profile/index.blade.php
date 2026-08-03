@@ -17,38 +17,65 @@
         </div>
         <div class="flex flex-wrap gap-3">
             <a href="{{ route('profile.edit') }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Edit Profil</a>
-            <a href="{{ route('profile.password') }}" class="btn-gold px-6 py-3 rounded-lg text-sm inline-block">Ubah Password</a>
+            <a href="{{ route('profile.password') }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Ubah Password</a>
             <a href="{{ route('profile.preferences') }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Preferensi Saya</a>
         </div>
     </div>
 
     <div class="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] mt-8">
         <div class="space-y-6">
-            <div class="bg-dark-100 border border-dark-300 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-xs text-muted uppercase tracking-[0.28em]">Pesanan Saya</p>
-                        <h2 class="font-display font-semibold text-lg">Status Pesanan</h2>
-                    </div>
+            <div class="bg-dark-100 border border-dark-300 rounded-xl p-5">
+                <div class="mb-5">
+                    <p class="text-xs text-muted uppercase tracking-[0.28em]">
+                        Pesanan Saya
+                    </p>
+                    <h2 class="font-display font-semibold text-2xl">
+                        Status Pesanan
+                    </h2>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="bg-dark-200 border border-dark-300 rounded-xl p-3 text-center">
-                        <p class="text-[11px] text-muted uppercase tracking-[0.28em] mb-2">Belum Dibayar</p>
-                        <p class="font-semibold text-xl">{{ $orderSummary['pending'] }}</p>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <div class="bg-dark-200 border border-dark-300 rounded-xl h-32 flex flex-col items-center justify-center transition hover:border-gold">
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">
+                            Belum Dibayar
+                        </p>
+
+                        <p class="mt-2 text-2xl font-semibold text-gold">
+                            {{ $orderSummary['pending'] }}
+                        </p>
                     </div>
-                    <div class="bg-dark-200 border border-dark-300 rounded-xl p-3 text-center">
-                        <p class="text-[11px] text-muted uppercase tracking-[0.28em] mb-2">Diproses</p>
-                        <p class="font-semibold text-xl">{{ $orderSummary['processing'] }}</p>
+
+                    <div class="bg-dark-200 border border-dark-300 rounded-xl h-32 flex flex-col items-center justify-center transition hover:border-gold">
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">
+                            Diproses
+                        </p>
+
+                        <p class="mt-2 text-2xl font-semibold text-gold">
+                            {{ $orderSummary['processing'] }}
+                        </p>
                     </div>
-                    <div class="bg-dark-200 border border-dark-300 rounded-xl p-3 text-center">
-                        <p class="text-[11px] text-muted uppercase tracking-[0.28em] mb-2">Dikirim</p>
-                        <p class="font-semibold text-xl">{{ $orderSummary['shipped'] }}</p>
+
+                    <div class="bg-dark-200 border border-dark-300 rounded-xl h-32 flex flex-col items-center justify-center transition hover:border-gold">
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">
+                            Dikirim
+                        </p>
+
+                        <p class="mt-2 text-2xl font-semibold text-gold">
+                            {{ $orderSummary['shipped'] }}
+                        </p>
                     </div>
-                    <div class="bg-dark-200 border border-dark-300 rounded-xl p-3 text-center">
-                        <p class="text-[11px] text-muted uppercase tracking-[0.28em] mb-2">Selesai</p>
-                        <p class="font-semibold text-xl">{{ $orderSummary['completed'] }}</p>
+
+                    <div class="bg-dark-200 border border-dark-300 rounded-xl h-32 flex flex-col items-center justify-center transition hover:border-gold">
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">
+                            Selesai
+                        </p>
+
+                        <p class="mt-2 text-2xl font-semibold text-gold">
+                            {{ $orderSummary['completed'] }}
+                        </p>
                     </div>
+
                 </div>
             </div>
 
