@@ -18,11 +18,21 @@
         </div>
         <div class="text-right">
             <p class="text-sm text-muted">Status</p>
+            @php
+                $orderStatuses = [
+                    'pending' => 'Pending',
+                    'paid' => 'Dibayar',
+                    'processing' => 'Diproses',
+                    'shipped' => 'Dikirim',
+                    'completed' => 'Selesai',
+                    'cancelled' => 'Dibatalkan',
+                ];
+            @endphp
             <form method="POST" action="{{ route('admin.orders.update', $order->id) }}">
                 @csrf @method('PUT')
                 <select name="status" class="input-dark px-3 py-1.5 rounded-lg text-sm">
-                    @foreach(['pending','dibayar','dikirim','selesai'] as $s)
-                        <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                    @foreach($orderStatuses as $value => $label)
+                        <option value="{{ $value }}" {{ $order->status === $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
                 <div class="mt-2 text-right">

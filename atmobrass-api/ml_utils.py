@@ -1,9 +1,16 @@
+import os
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from tensorflow.keras.layers import Input, LSTM, Dense, Concatenate, Dropout
-from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, LabelEncoder
+import joblib
+import xgboost as xgb
+
+FEATURE_COLUMNS = [
+    'Lag_1', 'Lag_2', 'Lag_3', 'Lag_6', 'Lag_12',
+    'MA_3', 'MA_6', 'STD_3', 'Month', 'Quarter', 'Produk'
+]
+DEFAULT_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xgboost_penjualan.json')
+DEFAULT_META_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xgboost_penjualan_meta.pkl')
 
 
 def load_dataset(path):
@@ -55,82 +62,91 @@ def build_product_features(df):
     return static_features, product_features['Nama_Produk'].to_dict(), encoder, scaler_price
 
 
-def build_sequences(pivot_sales, static_features, lookback):
-    scaler_qty = MinMaxScaler()
-    scaled_sales = scaler_qty.fit_transform(pivot_sales)
-    product_ids = pivot_sales.columns.tolist()
-    n_months = scaled_sales.shape[0]
+def build_feature_dataset(pivot_sales, product_encoder=None):
+    rows = []
+    targets = []
 
-    X_time = []
-    X_static = []
-    y = []
-    product_index = []
+    product_ids = list(pivot_sales.columns)
+    if product_encoder is None:
+        product_encoder = LabelEncoder()
+        product_encoder.fit(product_ids)
 
-    for j, prod_id in enumerate(product_ids):
-        for start in range(0, n_months - lookback):
-            X_time.append(scaled_sales[start:start + lookback, j].reshape(lookback, 1))
-            X_static.append(static_features[prod_id])
-            y.append(scaled_sales[start + lookback, j])
-            product_index.append(prod_id)
+    for prod_id in product_ids:
+        series = pivot_sales[prod_id].astype(float).fillna(0).to_numpy()
+        for idx in range(12, len(series)):
+            history = series[:idx]
+            lag_1 = float(history[-1]) if len(history) >= 1 else 0.0
+            lag_2 = float(history[-2]) if len(history) >= 2 else 0.0
+            lag_3 = float(history[-3]) if len(history) >= 3 else 0.0
+            lag_6 = float(history[-6]) if len(history) >= 6 else 0.0
+            lag_12 = float(history[-12]) if len(history) >= 12 else 0.0
+            ma_3 = float(np.mean(history[-3:])) if len(history) >= 3 else float(np.mean(history))
+            ma_6 = float(np.mean(history[-6:])) if len(history) >= 6 else float(np.mean(history))
+            std_3 = float(np.std(history[-3:])) if len(history) >= 3 else 0.0
+            month = int(pivot_sales.index[idx].month)
+            quarter = ((month - 1) // 3) + 1
+            rows.append({
+                'Lag_1': lag_1,
+                'Lag_2': lag_2,
+                'Lag_3': lag_3,
+                'Lag_6': lag_6,
+                'Lag_12': lag_12,
+                'MA_3': ma_3,
+                'MA_6': ma_6,
+                'STD_3': std_3,
+                'Month': month,
+                'Quarter': quarter,
+                'Produk': int(product_encoder.transform([prod_id])[0]),
+            })
+            targets.append(float(series[idx]))
 
-    if len(X_time) == 0:
-        raise ValueError('Tidak ada sampel pelatihan yang tersedia. Periksa nilai lookback dan panjang data.')
+    if not rows:
+        raise ValueError('Tidak ada sampel pelatihan tersedia untuk XGBoost.')
 
-    X_time = np.asarray(X_time, dtype=np.float32)
-    X_static = np.asarray(X_static, dtype=np.float32)
-    y = np.asarray(y, dtype=np.float32).reshape(-1, 1)
-
-    return X_time, X_static, y, scaler_qty, product_ids, product_index
+    features_df = pd.DataFrame(rows, columns=FEATURE_COLUMNS)
+    return features_df, np.asarray(targets, dtype=np.float32), product_encoder
 
 
-def build_model(lookback, static_dim, hidden_units=64, dropout_rate=0.2):
-    time_input = Input(shape=(lookback, 1), name='input_waktu')
-    x_time = LSTM(hidden_units, activation='tanh')(time_input)
-    x_time = Dropout(dropout_rate)(x_time)
-
-    static_input = Input(shape=(static_dim,), name='input_fitur')
-    x_static = Dense(hidden_units // 2, activation='relu')(static_input)
-    x_static = Dropout(dropout_rate)(x_static)
-
-    merged = Concatenate()([x_time, x_static])
-    x = Dense(hidden_units, activation='relu')(merged)
-    x = Dropout(dropout_rate)(x)
-    x = Dense(hidden_units // 2, activation='relu')(x)
-    output = Dense(1, activation='linear')(x)
-
-    model = Model(inputs=[time_input, static_input], outputs=output)
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mae'])
+def build_model(lookback=None, static_dim=None, hidden_units=64, dropout_rate=0.2):
+    model = xgb.XGBRegressor(
+        n_estimators=300,
+        learning_rate=0.05,
+        max_depth=6,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        objective='reg:squarederror',
+    )
     return model
 
 
-def train_model(pivot_sales, static_features, lookback, epochs=80, batch_size=32, val_split=0.15):
-    X_time, X_static, y, scaler_qty, product_ids, product_index = build_sequences(
-        pivot_sales, static_features, lookback
-    )
+def train_model(pivot_sales, static_features, lookback=None, epochs=80, batch_size=32, val_split=0.15, model_path=DEFAULT_MODEL_PATH):
+    features_df, target_values, product_encoder = build_feature_dataset(pivot_sales)
+    model = build_model()
+    model.fit(features_df, target_values)
 
-    model = build_model(lookback, X_static.shape[1])
+    if model_path:
+        model.save_model(model_path)
+        meta = {
+            'feature_columns': FEATURE_COLUMNS,
+            'product_encoder': product_encoder,
+        }
+        joblib.dump(meta, DEFAULT_META_PATH if model_path == DEFAULT_MODEL_PATH else model_path.replace('.json', '_meta.pkl'))
 
-    callbacks = []
-    try:
-        from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-        callbacks = [
-            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True, verbose=1),
-            ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=1, min_lr=1e-6),
-        ]
-    except Exception:
-        callbacks = []
+    return model, product_encoder
 
-    history = model.fit(
-        {'input_waktu': X_time, 'input_fitur': X_static},
-        y,
-        validation_split=val_split,
-        epochs=epochs,
-        batch_size=batch_size,
-        callbacks=callbacks,
-        verbose=0,
-    )
 
-    return model, scaler_qty
+def load_model(model_path=DEFAULT_MODEL_PATH, meta_path=DEFAULT_META_PATH):
+    if not os.path.exists(model_path):
+        return None, None
+
+    model = xgb.XGBRegressor()
+    model.load_model(model_path)
+    product_encoder = None
+    if os.path.exists(meta_path):
+        meta = joblib.load(meta_path)
+        product_encoder = meta.get('product_encoder', None)
+    return model, product_encoder
 
 
 def pad_history(history, lookback):
@@ -141,23 +157,52 @@ def pad_history(history, lookback):
 
 
 def inverse_transform_prediction(scaler_qty, prod_idx, scaled_value):
-    candidate = np.zeros((1, scaler_qty.scale_.shape[0]))
-    candidate[0, prod_idx] = scaled_value
-    inv = scaler_qty.inverse_transform(candidate)
-    return float(inv[0, prod_idx])
+    return float(max(0.0, scaled_value))
 
 
-def recursive_forecast(model, history_scaled, static_feature, scaler_qty, prod_idx, lookback, steps):
-    history = pad_history(history_scaled, lookback)
+def make_feature_row(history, product_id, month_number, product_encoder=None):
+    history = [max(0.0, float(value)) for value in history]
+    if product_encoder is not None:
+        product_code = int(product_encoder.transform([product_id])[0])
+    else:
+        product_code = 0
+
+    lag_1 = history[-1] if len(history) >= 1 else 0.0
+    lag_2 = history[-2] if len(history) >= 2 else 0.0
+    lag_3 = history[-3] if len(history) >= 3 else 0.0
+    lag_6 = history[-6] if len(history) >= 6 else 0.0
+    lag_12 = history[-12] if len(history) >= 12 else 0.0
+    ma_3 = float(np.mean(history[-3:])) if len(history) >= 3 else float(np.mean(history))
+    ma_6 = float(np.mean(history[-6:])) if len(history) >= 6 else float(np.mean(history))
+    std_3 = float(np.std(history[-3:])) if len(history) >= 3 else 0.0
+    quarter = ((month_number - 1) // 3) + 1
+
+    return pd.DataFrame([{
+        'Lag_1': lag_1,
+        'Lag_2': lag_2,
+        'Lag_3': lag_3,
+        'Lag_6': lag_6,
+        'Lag_12': lag_12,
+        'MA_3': ma_3,
+        'MA_6': ma_6,
+        'STD_3': std_3,
+        'Month': month_number,
+        'Quarter': quarter,
+        'Produk': product_code,
+    }], columns=FEATURE_COLUMNS)
+
+
+def recursive_forecast(model, history_scaled, product_id, product_encoder, start_month, steps):
+    history = [max(0.0, float(value)) for value in history_scaled]
     predictions = []
 
-    for _ in range(steps):
-        sequence = np.asarray(history[-lookback:], dtype=np.float32).reshape(1, lookback, 1)
-        pred_scaled = float(model.predict({'input_waktu': sequence, 'input_fitur': static_feature.reshape(1, -1)}, verbose=0)[0][0])
-        predicted_quantity = inverse_transform_prediction(scaler_qty, prod_idx, pred_scaled)
-        predicted_quantity = max(0.0, predicted_quantity)
+    for step in range(steps):
+        month_number = ((start_month - 1 + step) % 12) + 1
+        feature_row = make_feature_row(history, product_id, month_number, product_encoder)
+        pred_scaled = float(model.predict(feature_row)[0])
+        predicted_quantity = max(0.0, pred_scaled)
         predictions.append(predicted_quantity)
-        history.append(pred_scaled)
+        history.append(predicted_quantity)
 
     return predictions
 

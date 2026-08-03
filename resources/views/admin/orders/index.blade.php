@@ -6,9 +6,19 @@
 <h1 class="font-display font-bold text-2xl mb-6">Manajemen Pesanan</h1>
 
 <div class="flex flex-wrap gap-2 mb-6">
+    @php
+        $orderStatuses = [
+            'pending' => 'Pending',
+            'paid' => 'Dibayar',
+            'processing' => 'Diproses',
+            'shipped' => 'Dikirim',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+        ];
+    @endphp
     <a href="{{ route('admin.orders.index') }}" class="px-4 py-2 rounded-full text-xs font-medium transition-all {{ !request('status') ? 'btn-gold' : 'bg-dark-100 border border-dark-300 text-muted hover:border-gold-dark' }}">Semua</a>
-    @foreach(['pending','dibayar','dikirim','selesai'] as $s)
-        <a href="{{ route('admin.orders.index', ['status' => $s]) }}" class="px-4 py-2 rounded-full text-xs font-medium transition-all {{ request('status') === $s ? 'btn-gold' : 'bg-dark-100 border border-dark-300 text-muted hover:border-gold-dark' }}">{{ ucfirst($s) }}</a>
+    @foreach($orderStatuses as $value => $label)
+        <a href="{{ route('admin.orders.index', ['status' => $value]) }}" class="px-4 py-2 rounded-full text-xs font-medium transition-all {{ request('status') === $value ? 'btn-gold' : 'bg-dark-100 border border-dark-300 text-muted hover:border-gold-dark' }}">{{ $label }}</a>
     @endforeach
 </div>
 
@@ -27,8 +37,8 @@
                     <form method="POST" action="{{ route('admin.orders.update', $order->id) }}" class="inline">
                         @csrf @method('PUT')
                         <select name="status" onchange="this.form.submit()" class="input-dark px-3 py-1.5 rounded-lg text-xs">
-                            @foreach(['pending','dibayar','dikirim','selesai'] as $s)
-                                <option value="{{ $s }}" {{ $order->status === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                            @foreach($orderStatuses as $value => $label)
+                                <option value="{{ $value }}" {{ $order->status === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </form>

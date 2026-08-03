@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Category;
@@ -22,6 +23,7 @@ class AdminController extends Controller
         // Bulanan
         $monthlyLabels = [];
         $monthlyValues = [];
+        $monthlyQuantityValues = [];
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $monthlyLabels[] = $date->locale('id_ID')->translatedFormat('M');
@@ -29,6 +31,12 @@ class AdminController extends Controller
                 ->whereYear('created_at', $date->year)
                 ->where('status', '!=', 'pending')
                 ->sum('total_amount');
+
+            $monthlyQuantityValues[] = OrderItem::whereHas('order', function ($query) use ($date) {
+                    $query->whereMonth('created_at', $date->month)
+                        ->whereYear('created_at', $date->year)
+                        ->where('status', '!=', 'pending');
+                })->sum('quantity');
         }
 
         // Tahunan
@@ -47,19 +55,34 @@ class AdminController extends Controller
         $catLabels = $categoryData->pluck('name')->toArray();
         $catValues = $categoryData->pluck('products_count')->toArray();
 
-        // Prediksi Linear Regression
-        $predicted = $this->predictNext($monthlyValues);
+        // XGBoost prediction total
+        $predictedQuantity = null;
+        $predictionError = null;
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
+        try {
+            $response = Http::timeout(30)->get("{$apiBase}/api/predict");
+            if ($response->successful()) {
+                $data = $response->json();
+                $rawPredictions = $data['data'] ?? [];
+                $predictedQuantity = array_sum(array_column($rawPredictions, 'prediksi_pcs'));
+            } else {
+                $predictionError = 'Gagal memuat prediksi XGBoost. Status: ' . $response->status();
+            }
+        } catch (\Exception $e) {
+            $predictionError = 'Gagal menghubungi server ML: ' . $e->getMessage();
+        }
 
         return view('admin.dashboard', compact(
             'totalRevenue', 'totalOrders', 'totalProducts', 'totalUsers',
-            'monthlyLabels', 'monthlyValues',
+            'monthlyLabels', 'monthlyValues', 'monthlyQuantityValues',
             'yearlyLabels', 'yearlyValues',
             'catLabels', 'catValues',
-            'predicted'
+            'predictedQuantity', 'predictionError'
         ));
     }
 
-    public function lstm()
+    public function xgboost()
     {
         $predictions = collect();
         $history = null;
@@ -72,7 +95,7 @@ class AdminController extends Controller
         $predictedMonth = null;
         try {
             $response = Http::timeout(30)->get("{$apiBase}/api/predict");
-            if ($response->successful()) {
+                if ($response->successful()) {
                 $data = $response->json();
                 $rawPredictions = $data['data'] ?? [];
                 foreach ($rawPredictions as $item) {
@@ -87,9 +110,9 @@ class AdminController extends Controller
                 if (empty($rawPredictions)) {
                     $error = 'Prediksi belum tersedia atau model belum menghasilkan output. Silakan cek backend Python.';
                 }
-            } else {
-                $error = 'Gagal memuat prediksi LSTM. Status: ' . $response->status();
-            }
+                } else {
+                    $error = 'Gagal memuat prediksi XGBoost. Status: ' . $response->status();
+                }
         } catch (\Exception $e) {
             $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
@@ -122,7 +145,7 @@ class AdminController extends Controller
             $forecastError = 'Gagal menghubungi server forecast ML: ' . $e->getMessage();
         }
 
-        return view('admin.lstm', compact(
+        return view('admin.xgboost', compact(
             'predictions', 'error', 'history', 'historyError', 'predictedMonth',
             'forecast', 'forecastError'
         ));
@@ -202,7 +225,7 @@ class AdminController extends Controller
         return redirect()->route('admin.payment')->with('success', 'QRIS berhasil diperbarui.');
     }
 
-    public function reloadLstm(Request $request)
+    public function reloadXgboost(Request $request)
     {
         $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
         $error = null;
@@ -210,7 +233,7 @@ class AdminController extends Controller
         try {
             $response = Http::timeout(10)->post("{$apiBase}/api/reload");
             if ($response->successful()) {
-                return redirect()->route('admin.lstm')->with('status', 'Reload dataset dan model berhasil.');
+                return redirect()->route('admin.xgboost')->with('status', 'Reload dataset dan model berhasil.');
             }
 
             $error = 'Gagal memuat ulang ML server. Status: ' . $response->status();
@@ -218,7 +241,7 @@ class AdminController extends Controller
             $error = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
 
-        return redirect()->route('admin.lstm')->with('error', $error);
+        return redirect()->route('admin.xgboost')->with('error', $error);
     }
 
     private function predictNext($data)

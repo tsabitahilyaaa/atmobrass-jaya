@@ -15,8 +15,11 @@
 <div class="grid lg:grid-cols-2 gap-6">
     <div class="bg-dark-100 border border-dark-300 rounded-xl p-6"><h3 class="font-semibold text-sm mb-4">Distribusi Kategori</h3><div style="position:relative;height:220px"><canvas id="chart-category"></canvas></div></div>
     <div class="bg-dark-100 border border-dark-300 rounded-xl p-6">
-        <h3 class="font-semibold text-sm mb-4">Prediksi Bulan Depan</h3>
-        <div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center"><i class="fas fa-chart-line text-gold text-xl"></i></div><div><p class="text-xs text-muted">Estimasi (Linear Regression)</p><p class="text-gold font-bold text-xl">Rp {{ number_format($predicted,0,',','.') }}</p></div></div>
+        <h3 class="font-semibold text-sm mb-4">Prediksi Produksi XGBoost</h3>
+        <div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center"><i class="fas fa-brain text-gold text-xl"></i></div><div><p class="text-xs text-muted">Estimasi total produksi bulan berikutnya</p><p class="text-gold font-bold text-xl">{{ number_format($predictedQuantity ?? 0,0,',','.') }} pcs</p></div></div>
+        @if(!empty($predictionError))
+            <div class="text-sm text-red-300 mb-4">{{ $predictionError }}</div>
+        @endif
         <div style="position:relative;height:170px"><canvas id="chart-prediction"></canvas></div>
     </div>
 </div>
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(document.getElementById('chart-yearly'),{type:'line',data:{labels:{{ json_encode($yearlyLabels) }},datasets:[{data:{{ json_encode($yearlyValues) }},borderColor:gold,backgroundColor:goldBg,fill:true,tension:.4,pointBackgroundColor:gold,pointRadius:5}]},options:base});
     new Chart(document.getElementById('chart-category'),{type:'doughnut',data:{labels:{{ json_encode($catLabels) }},datasets:[{data:{{ json_encode($catValues) }},backgroundColor:['rgba(200,169,81,0.8)','rgba(168,162,158,0.8)','rgba(232,212,139,0.8)','rgba(154,123,44,0.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:tickC,padding:15,font:{size:11}}}}}});
 
-    var av = {{ json_encode($monthlyValues) }}.concat([{{ $predicted }}]);
+    var av = {{ json_encode($monthlyQuantityValues) }}.concat([{{ $predictedQuantity ?? 0 }}]);
     var al = {{ json_encode($monthlyLabels) }}.concat(['Prediksi']);
     var pc = al.map(function(_,i){return i===al.length-1?'#ef4444':gold;});
     var ps = al.map(function(_,i){return i===al.length-1?7:3;});

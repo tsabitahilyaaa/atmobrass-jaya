@@ -8,7 +8,6 @@ import json
 import glob
 import joblib
 
-from tensorflow.keras.models import load_model
 from sklearn.metrics.pairwise import cosine_similarity
 from ml_utils import (
     build_monthly_pivot,
@@ -19,6 +18,7 @@ from ml_utils import (
     recursive_forecast,
     inverse_transform_prediction,
     pad_history,
+    load_model as load_xgb_model,
 )
 
 app = Flask(__name__)
@@ -29,7 +29,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Gunakan absolute path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(SCRIPT_DIR, 'dataset_atmobrass.csv')
-MODEL_PATH = os.path.join(SCRIPT_DIR, 'model_atmobrass.h5')
+MODEL_PATH = os.path.join(SCRIPT_DIR, 'xgboost_penjualan.json')
 LOOKBACK = 60
 default_lookback = LOOKBACK
 
@@ -55,8 +55,8 @@ def get_model_related_paths():
     if os.path.exists(MODEL_PATH):
         paths.append(MODEL_PATH)
 
-    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'model_prod_*.h5')))
-    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'scaler_prod_*.pkl')))
+    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'xgboost_penjualan*.pkl')))
+    paths.extend(glob.glob(os.path.join(SCRIPT_DIR, 'xgboost_penjualan*.json')))
 
     static_meta_path = os.path.join(SCRIPT_DIR, 'static_meta.pkl')
     if os.path.exists(static_meta_path):
@@ -87,7 +87,7 @@ def get_model_lookback(loaded_model):
 def load_data_and_model():
     global pivot_sales, scaler_qty, kolom_produk, dict_nama_produk
     global static_features_dict, num_static_features, model
-    global last_reload, data_mtime, model_mtime
+    global last_reload, data_mtime, model_mtime, default_lookback
 
     print("[INFO] Memuat ulang dataset dan model...")
 
@@ -100,7 +100,7 @@ def load_data_and_model():
     pivot_sales = pivot_sales.resample('MS').asfreq().fillna(0)
 
     scaler_qty = MinMaxScaler()
-    scaled_sales = scaler_qty.fit_transform(pivot_sales)
+    scaler_qty.fit_transform(pivot_sales)
 
     kolom_produk = pivot_sales.columns.tolist()
     dict_nama_produk = df.drop_duplicates('ID_Produk').set_index('ID_Produk')['Nama_Produk'].to_dict()
@@ -132,21 +132,12 @@ def load_data_and_model():
     product_scalers.clear()
     product_lookbacks.clear()
 
-    model_files = glob.glob(os.path.join(SCRIPT_DIR, 'model_prod_*.h5'))
-    if model_files:
-        for path in model_files:
-            prod_id = os.path.splitext(os.path.basename(path))[0].replace('model_prod_', '')
-            loaded_model = load_model(path, compile=False)
-            product_models[prod_id] = loaded_model
-            scaler_path = os.path.join(SCRIPT_DIR, f'scaler_prod_{prod_id}.pkl')
-            if os.path.exists(scaler_path):
-                product_scalers[prod_id] = joblib.load(scaler_path)
-            product_lookbacks[prod_id] = get_model_lookback(loaded_model)
-        print(f"[INFO] Loaded {len(product_models)} product-specific models.")
-        model = None
+    model, product_encoder = load_xgb_model(MODEL_PATH, os.path.join(SCRIPT_DIR, 'xgboost_penjualan_meta.pkl'))
+    if model is not None:
+        default_lookback = 12
+        print("[INFO] XGBoost model berhasil dimuat.")
     else:
-        model = load_model(MODEL_PATH, compile=False)
-        default_lookback = get_model_lookback(model)
+        raise FileNotFoundError(f'Model XGBoost tidak ditemukan di {MODEL_PATH}')
 
     last_reload = pd.Timestamp.now()
     data_mtime = os.path.getmtime(DATA_PATH)
@@ -203,12 +194,6 @@ def build_indonesian_month_label(date):
 
 
 def get_product_model_and_scaler(prod_id):
-    if prod_id in product_models:
-        return (
-            product_models[prod_id],
-            product_scalers.get(prod_id, None),
-            product_lookbacks.get(prod_id, default_lookback),
-        )
     return model, scaler_qty, default_lookback
 
 
@@ -223,7 +208,7 @@ def evaluate_model_on_2025(epochs=60, batch_size=16):
 
     static_features, _, _, _ = build_product_features(df)
 
-    need_fallback_model = model is not None or any(prod_id not in product_models for prod_id in train_pivot.columns.tolist())
+    need_fallback_model = (model is None) or any(prod_id not in product_models for prod_id in train_pivot.columns.tolist())
     eval_model = None
     eval_scaler = None
     eval_lookback = LOOKBACK
@@ -259,29 +244,14 @@ def evaluate_model_on_2025(epochs=60, batch_size=16):
         if prod_id not in static_features:
             continue
 
-        if prod_id in product_models:
-            prod_model, prod_scaler, prod_lookback = get_product_model_and_scaler(prod_id)
-            actual_series = train_pivot[prod_id].fillna(0).astype(float).values.reshape(-1, 1)
-            history_scaled = prod_scaler.transform(actual_series).flatten().tolist()
-            predictions = recursive_forecast(
-                prod_model,
-                history_scaled,
-                np.asarray(static_features[prod_id], dtype=np.float32),
-                prod_scaler,
-                0,
-                prod_lookback,
-                len(months),
-            )
-        elif model is not None:
+        if model is not None:
             history_scaled = scaler_qty.transform(train_pivot)[:, prod_idx].tolist()
-            prod_lookback = LOOKBACK
             predictions = recursive_forecast(
                 model,
                 history_scaled,
-                np.asarray(static_features[prod_id], dtype=np.float32),
-                scaler_qty,
-                prod_idx,
-                prod_lookback,
+                prod_id,
+                None,
+                1,
                 len(months),
             )
         elif eval_model is not None:
@@ -372,6 +342,7 @@ def forecast_future_steps(steps=5):
         build_indonesian_month_label(last_month + pd.DateOffset(months=i))
         for i in range(1, steps + 1)
     ]
+    start_month = ((last_month.month) % 12) + 1
 
     scaled_sales = scaler_qty.transform(pivot_sales)
     overall_month_totals = [0.0] * steps
@@ -383,10 +354,9 @@ def forecast_future_steps(steps=5):
         predictions = recursive_forecast(
             prod_model,
             history_scaled,
-            static_features_dict[prod_id].reshape(1, -1),
-            prod_scaler,
-            0 if prod_scaler is not scaler_qty else prod_idx,
-            prod_lookback,
+            prod_id,
+            None,
+            start_month,
             steps,
         )
 
@@ -436,19 +406,22 @@ def predict_produksi():
             else:
                 padded_history = history_values[-prod_lookback:]
 
-            input_waktu_pred = padded_history.reshape(1, prod_lookback, 1)
-            input_fitur_pred = static_features_dict[prod_id].reshape(1, -1)
-
-            pred_skala = prod_model.predict({'input_waktu': input_waktu_pred, 'input_fitur': input_fitur_pred}, verbose=0)
-
-            if prod_scaler is scaler_qty:
-                dummy_array = np.zeros((1, len(kolom_produk)))
-                dummy_array[0, j] = pred_skala[0][0]
-                prediksi_asli = scaler_qty.inverse_transform(dummy_array)[0, j]
-            else:
-                prediksi_asli = prod_scaler.inverse_transform([[pred_skala[0][0]]])[0, 0]
-
-            jumlah_produksi = int(np.ceil(prediksi_asli))
+            next_month = pivot_sales.index.max() + pd.DateOffset(months=1)
+            feature_df = pd.DataFrame([{
+                'Lag_1': float(padded_history[-1]) if len(padded_history) > 0 else 0.0,
+                'Lag_2': float(padded_history[-2]) if len(padded_history) > 1 else 0.0,
+                'Lag_3': float(padded_history[-3]) if len(padded_history) > 2 else 0.0,
+                'Lag_6': float(padded_history[-6]) if len(padded_history) > 5 else 0.0,
+                'Lag_12': float(padded_history[-12]) if len(padded_history) > 11 else 0.0,
+                'MA_3': float(np.mean(padded_history[-3:])) if len(padded_history) >= 3 else float(np.mean(padded_history)),
+                'MA_6': float(np.mean(padded_history[-6:])) if len(padded_history) >= 6 else float(np.mean(padded_history)),
+                'STD_3': float(np.std(padded_history[-3:])) if len(padded_history) >= 3 else 0.0,
+                'Month': int(next_month.month),
+                'Quarter': ((int(next_month.month) - 1) // 3) + 1,
+                'Produk': 0,
+            }], columns=['Lag_1','Lag_2','Lag_3','Lag_6','Lag_12','MA_3','MA_6','STD_3','Month','Quarter','Produk'])
+            prediksi_asli = float(prod_model.predict(feature_df)[0])
+            jumlah_produksi = int(np.ceil(max(0.0, prediksi_asli)))
             jumlah_produksi = max(0, jumlah_produksi)
 
             hasil_prediksi.append({

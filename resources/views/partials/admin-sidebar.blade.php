@@ -3,7 +3,7 @@
  $dash = $r === 'admin';
  $prods = str_contains($r, 'admin/produk');
  $pay = str_contains($r, 'admin/pembayaran');
- $lstm = str_contains($r, 'admin/lstm');
+ $lstm = str_contains($r, 'admin/xgboost');
  $history = str_contains($r, 'admin/history');
  $msgs = str_contains($r, 'admin/pesan');
  $ords = str_contains($r, 'admin/pesanan');
@@ -25,8 +25,8 @@
         <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $prods ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-boxes-stacked w-5"></i>Produk
         </a>
-        <a href="{{ route('admin.lstm') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $lstm ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
-            <i class="fas fa-brain w-5"></i>Prediksi LSTM
+        <a href="{{ route('admin.xgboost') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $lstm ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-brain w-5"></i>Prediksi XGBoost
         </a>
         <a href="{{ route('admin.history') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $history ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-clock-rotate-left w-5"></i>Riwayat Penjualan

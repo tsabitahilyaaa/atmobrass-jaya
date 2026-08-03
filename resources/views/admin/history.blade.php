@@ -30,7 +30,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <div>
             <h2 class="font-semibold text-lg text-white mb-1">Backtest Evaluasi 2025</h2>
-            <p class="text-sm text-muted">Laporan evaluasi model LSTM dibandingkan data aktual periode 2025.</p>
+            <p class="text-sm text-muted">Laporan evaluasi model XGBoost dibandingkan data aktual periode 2025.</p>
         </div>
     </div>
 
@@ -81,7 +81,15 @@
     </div>
 
     <div class="mb-6">
-        <h3 class="font-semibold text-lg mb-3">Grafik Aktual vs Prediksi 2025</h3>
+        <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-lg mb-3">Grafik Aktual vs Prediksi 2025</h3>
+            <div class="flex items-center gap-3">
+                <label class="text-sm text-muted">Pilih Produk:</label>
+                <select id="evalProductSelect" class="px-3 py-1 rounded bg-dark-200 text-white border border-dark-300 focus:outline-none">
+                    <!-- options injected by JS -->
+                </select>
+            </div>
+        </div>
         <div style="position:relative;height:360px;">
             <canvas id="evaluationChart"></canvas>
         </div>
@@ -162,6 +170,7 @@
         ];
 
         const labels = monthNames; // X-axis will show months only
+        const mlApiBase = "{{ config('app.python_api_url', 'http://127.0.0.1:5000') }}";
 
         const productSelect = document.getElementById('productSelect');
         productsData.products.forEach(p => {
@@ -190,7 +199,7 @@
             document.getElementById('prodLowestMonth').textContent = lowestIdx >=0 ? labels[lowestIdx] : '-';
         }
 
-        function initChartForProduct(productId) {
+        async function initChartForProduct(productId) {
             const prod = productsData.products.find(p => p.id_produk == productId);
             if (!prod) return;
 
@@ -221,6 +230,60 @@
                 pointRadius: 3,
                 borderWidth: 2
             }));
+
+            // Attempt to fetch a 12-month forecast from the ML API and add a 2026 prediction line
+            try {
+                const resp = await fetch(mlApiBase + '/api/forecast?steps=12');
+                if (resp.ok) {
+                    const j = await resp.json();
+                    const fdata = j.data;
+                    if (fdata && Array.isArray(fdata.forecast_months) && Array.isArray(fdata.products)) {
+                        // Map Indonesian month names to month numbers
+                        const indMonthMap = {
+                            'Januari': 1, 'Februari': 2, 'Maret': 3, 'April': 4,
+                            'Mei': 5, 'Juni': 6, 'Juli': 7, 'Agustus': 8,
+                            'September': 9, 'Oktober': 10, 'November': 11, 'Desember': 12
+                        };
+
+                        // Find forecast entry for this product
+                        const fprod = fdata.products.find(p => String(p.id_produk) === String(productId) || String(p.id_produk) === String(prod.id_produk));
+                        if (fprod) {
+                            const pred2026 = Array(12).fill(null);
+                            for (let i = 0; i < fdata.forecast_months.length; i++) {
+                                const fm = fdata.forecast_months[i]; // e.g. 'Januari 2026'
+                                const parts = String(fm).trim().split(' ');
+                                if (parts.length >= 2) {
+                                    const monthName = parts[0];
+                                    const yearNum = parseInt(parts[1], 10);
+                                    const monthNum = indMonthMap[monthName] || (i+1);
+                                    if (yearNum === 2026) {
+                                        // find the corresponding predicted value for this forecast step in fprod.monthly
+                                        const step = fprod.monthly && fprod.monthly[i] ? Number(fprod.monthly[i].prediksi_pcs || 0) : 0;
+                                        pred2026[monthNum - 1] = step;
+                                    }
+                                }
+                            }
+
+                            // If any 2026 values exist, add a dashed prediction line for 2026
+                            if (pred2026.some(v => v !== null && v !== 0)) {
+                                datasets.push({
+                                    label: '2026 Prediksi',
+                                    data: pred2026,
+                                    borderColor: '#F59E0B',
+                                    backgroundColor: 'rgba(245,158,11,0.06)',
+                                    borderDash: [6, 4],
+                                    fill: false,
+                                    tension: 0.3,
+                                    pointRadius: 3,
+                                    borderWidth: 2
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal memuat forecast 2026:', err);
+            }
 
             // For summary, compute totals across all months for selected product (sum of series)
             const flatSeries = prod.series.map(v => Number(v || 0));
@@ -290,21 +353,39 @@
         });
 
         @if(isset($evaluation) && $evaluation)
-            const evaluationLabels = {!! json_encode($evaluation['months']) !!};
-            const evaluationActual = {!! json_encode($evaluation['trend']['actual']) !!};
-            const evaluationPredicted = {!! json_encode($evaluation['trend']['predicted']) !!};
+            const evaluationMonths = {!! json_encode($evaluation['months']) !!};
+            const evalProducts = {!! json_encode($evaluation['product_summary']) !!};
 
-            const evaluationCanvas = document.getElementById('evaluationChart');
-            if (evaluationCanvas) {
-                const ctxEval = evaluationCanvas.getContext('2d');
-                new Chart(ctxEval, {
+            const evalSelect = document.getElementById('evalProductSelect');
+            // populate selector
+            evalProducts.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id_produk;
+                opt.textContent = p.nama_produk + ' (' + p.id_produk + ')';
+                evalSelect.appendChild(opt);
+            });
+
+            let evalChart = null;
+            function initEvaluationChart(productId) {
+                const prod = evalProducts.find(x => String(x.id_produk) === String(productId));
+                if (!prod) return;
+
+                const actual = (prod.actual_series || []).map(v => Number(v || 0));
+                const predicted = (prod.predicted_series || []).map(v => Number(v || 0));
+
+                const canvas = document.getElementById('evaluationChart');
+                if (!canvas) return;
+                const ctxEval = canvas.getContext('2d');
+                if (evalChart) evalChart.destroy();
+
+                evalChart = new Chart(ctxEval, {
                     type: 'line',
                     data: {
-                        labels: evaluationLabels,
+                        labels: evaluationMonths,
                         datasets: [
                             {
                                 label: 'Aktual 2025',
-                                data: evaluationActual,
+                                data: actual,
                                 borderColor: 'rgba(34,197,94,1)',
                                 backgroundColor: 'rgba(34,197,94,0.15)',
                                 fill: false,
@@ -314,7 +395,7 @@
                             },
                             {
                                 label: 'Prediksi 2025',
-                                data: evaluationPredicted,
+                                data: predicted,
                                 borderColor: 'rgba(59,130,246,1)',
                                 backgroundColor: 'rgba(59,130,246,0.15)',
                                 fill: false,
@@ -338,6 +419,15 @@
                     }
                 });
             }
+
+            if (evalProducts.length > 0) {
+                evalSelect.value = evalProducts[0].id_produk;
+                initEvaluationChart(evalSelect.value);
+            }
+
+            evalSelect.addEventListener('change', function () {
+                initEvaluationChart(this.value);
+            });
         @endif
 
         const tabEvaluationBtn = document.getElementById('tabEvaluationBtn');
