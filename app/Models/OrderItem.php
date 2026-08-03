@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class OrderItem extends Model
 {
@@ -67,5 +68,18 @@ class OrderItem extends Model
             ',',
             '.'
         );
+    }
+
+    public function getProductImageUrlAttribute()
+    {
+        if (! $this->product_image) {
+            return '';
+        }
+
+        if (Str::startsWith($this->product_image, ['http://', 'https://'])) {
+            return $this->product_image;
+        }
+
+        return asset($this->product_image);
     }
 }
