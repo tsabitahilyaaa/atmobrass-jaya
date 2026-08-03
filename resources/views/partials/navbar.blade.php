@@ -29,13 +29,39 @@
                 @endif
             </a>
             @if(auth()->check())
+
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}" class="p-2 text-gold"><i class="fas fa-user-shield text-lg"></i></a>
+                        <a href="{{ route('admin.dashboard') }}" class="p-2 text-gold">
+                            <i class="fas fa-user-shield text-lg"></i>
+                        </a>
                 @endif
-                <form method="POST" action="{{ route('logout') }}" class="inline">@csrf<button type="submit" class="p-2 hover:text-red-400" style="color:#9A9590"><i class="fas fa-sign-out-alt text-lg"></i></button></form>
-                <span class="text-xs font-semibold text-gold hidden sm:inline">{{ auth()->user()->name }}</span>
+
+                <a href="{{ route('profile') }}"
+                class="flex items-center gap-2 px-2 hover:text-gold transition"
+                style="color:#C8A951">
+                    <i class="fas fa-user text-lg"></i>
+                    <span class="text-xs font-semibold hidden sm:inline">
+                        {{ auth()->user()->name }}
+                    </span>
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit"
+                            class="p-2 hover:text-red-400"
+                            style="color:#9A9590">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </form>
+
             @else
-                <a href="{{ route('login') }}" class="p-2 hover:text-gold" style="color:#9A9590"><i class="fas fa-user text-lg"></i></a>
+
+                <a href="{{ route('login') }}"
+                class="p-2 hover:text-gold"
+                style="color:#9A9590">
+                    <i class="fas fa-user text-lg"></i>
+                </a>
+
             @endif
             <button id="mobile-menu-btn" class="lg:hidden p-2 hover:text-gold" style="color:#9A9590"><i class="fas fa-bars text-lg"></i></button>
         </div>

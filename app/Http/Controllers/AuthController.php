@@ -41,6 +41,7 @@ class AuthController extends Controller
         }
 
         $this->transferSessionCartToUserCart(Auth::user());
+        $this->transferGuestPreferencesToUserPreferences(Auth::user());
 
         return redirect()->intended(route('home'));
     }
@@ -60,19 +61,18 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
-            'phone' => $validated['phone'] ?? null,
             'role' => 'customer',
         ]);
 
         Auth::login($user);
         $this->transferSessionCartToUserCart($user);
+        $this->transferGuestPreferencesToUserPreferences($user);
 
         return redirect()->intended(route('home'))->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . '.');
     }
@@ -111,5 +111,22 @@ class AuthController extends Controller
         }
 
         session()->forget('cart');
+    }
+
+    private function transferGuestPreferencesToUserPreferences(User $user): void
+    {
+        $guestPreferences = session('guest_preferences', []);
+
+        if (empty($guestPreferences)) {
+            return;
+        }
+
+        foreach (array_unique($guestPreferences) as $preference) {
+            $user->preferences()->firstOrCreate([
+                'preference' => $preference,
+            ]);
+        }
+
+        session()->forget('guest_preferences');
     }
 }

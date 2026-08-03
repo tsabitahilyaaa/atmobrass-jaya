@@ -30,9 +30,25 @@ class CheckoutController extends Controller
             $recommendedContent = $this->fetchContentRecommendations($referenceProduct->name, 4);
         }
 
+        $user = auth()->user();
+
+        $addresses = $user->addresses()
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get();
+
+        $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
+
         $qrisImage = $this->qrisImageUrl();
 
-        return view('checkout.index', compact('cartItems', 'total', 'recommendedContent', 'qrisImage'));
+        return view('checkout.index', compact(
+            'cartItems',
+            'total',
+            'recommendedContent',
+            'qrisImage',
+            'defaultAddress',
+            'addresses'
+        ));
     }
 
     public function process(Request $request)
@@ -44,17 +60,25 @@ class CheckoutController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'address_id' => 'required|exists:addresses,id',
             'email' => 'nullable|email|max:255',
-            'phone' => ['required','regex:/^[0-9]{1,15}$/', 'max:15'],
-            'city' => 'required|string|max:255',
-            'address' => 'required|string|max:1000',
-            'postal' => 'required|string|max:20',
             'payment_amount' => 'required|numeric|min:1',
+            'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:5120',
             'notes' => 'nullable|string|max:2000',
-        ], [
-            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
         ]);
+
+        $paymentProof = null;
+
+        if ($request->hasFile('payment_proof')) {
+            $paymentProof = $request->file('payment_proof')
+                ->store('payment-proofs', 'public');
+        }
+
+        $selectedAddress = auth()->user()->addresses()->find($request->address_id);
+
+        if (! $selectedAddress) {
+            return back()->withInput()->with('error', 'Alamat pengiriman yang dipilih tidak valid.');
+        }
 
         $cartData = $this->getCartItems();
         $cartItems = $cartData['items'];
@@ -81,16 +105,20 @@ class CheckoutController extends Controller
 
         $order = Order::create([
             'user_id' => auth()->id(),
+            'address_id' => $selectedAddress->id,
             'order_number' => 'ORD-' . strtoupper(substr(md5(uniqid()), 0, 8)),
             'status' => 'pending',
             'payment_method' => 'qris',
             'payment_amount' => $request->payment_amount,
+            'payment_proof' => $paymentProof,
+            'payment_status' => 'pending',
             'total_amount' => $total,
-            'shipping_name' => $request->name,
+            'shipping_name' => $selectedAddress->recipient_name,
             'shipping_email' => $request->email,
-            'shipping_phone' => $request->phone,
-            'shipping_city' => $request->city,
-            'shipping_address' => $request->address,
+            'shipping_phone' => $selectedAddress->phone,
+            'shipping_city' => $selectedAddress->city,
+            'shipping_postal' => $selectedAddress->postal_code,
+            'shipping_address' => $selectedAddress->address,
             'notes' => $request->notes,
             'ordered_at' => now(),
         ]);
