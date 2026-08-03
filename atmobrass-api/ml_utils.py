@@ -219,9 +219,11 @@ def compute_metrics(actual, predicted):
     mse = float(np.mean(np.square(diffs)))
     rmse = float(np.sqrt(mse))
 
-    nonzero_mask = actual_arr != 0
-    if np.any(nonzero_mask):
-        mape = float(np.mean(np.abs(diffs[nonzero_mask] / actual_arr[nonzero_mask])) * 100)
+    total_actual = float(np.sum(actual_arr))
+    total_predicted = float(np.sum(predicted_arr))
+
+    if total_actual != 0.0:
+        mape = float(abs(total_predicted - total_actual) / total_actual * 100)
     else:
         mape = 0.0
 

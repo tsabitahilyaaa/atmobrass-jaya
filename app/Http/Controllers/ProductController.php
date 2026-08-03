@@ -48,7 +48,7 @@ class ProductController extends Controller
 
         // Request content-based recommendations from Python API by product name
         $recommendedContent = collect();
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         try {
             $resp = Http::timeout(5)->get($apiBase . '/api/recommend_by_name', ['name' => $product->name, 'n' => 4]);

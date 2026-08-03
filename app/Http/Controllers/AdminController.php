@@ -8,77 +8,78 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
-use App\Models\Category;
+use App\Models\ContactMessage;
 use Carbon\Carbon;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalRevenue = Order::where('status', '!=', 'pending')->sum('total_amount');
+        $validOrderStatuses = ['paid', 'processing', 'shipped', 'completed'];
+
         $totalOrders = Order::count();
         $totalProducts = Product::count();
         $totalUsers = User::where('role', 'customer')->count();
 
-        // Bulanan
-        $monthlyLabels = [];
-        $monthlyValues = [];
-        $monthlyQuantityValues = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $monthlyLabels[] = $date->locale('id_ID')->translatedFormat('M');
-            $monthlyValues[] = Order::whereMonth('created_at', $date->month)
-                ->whereYear('created_at', $date->year)
-                ->where('status', '!=', 'pending')
-                ->sum('total_amount');
+        $weekStart = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
 
-            $monthlyQuantityValues[] = OrderItem::whereHas('order', function ($query) use ($date) {
+        $incomingMessagesThisWeek = ContactMessage::whereBetween('created_at', [$weekStart, $weekEnd])->count();
+        $newUsersThisWeek = User::where('role', 'customer')->whereBetween('created_at', [$weekStart, $weekEnd])->count();
+        $newCustomerOrdersThisWeek = Order::whereHas('user', function ($query) use ($weekStart, $weekEnd) {
+            $query->where('role', 'customer')
+                  ->whereBetween('created_at', [$weekStart, $weekEnd]);
+        })->count();
+
+        $predictionLabels = [];
+        $predictionQuantityValues = [];
+        for ($i = 2; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $predictionLabels[] = $date->locale('id_ID')->translatedFormat('M');
+            $predictionQuantityValues[] = OrderItem::whereHas('order', function ($query) use ($date, $validOrderStatuses) {
                     $query->whereMonth('created_at', $date->month)
                         ->whereYear('created_at', $date->year)
-                        ->where('status', '!=', 'pending');
+                        ->whereIn('status', $validOrderStatuses);
                 })->sum('quantity');
         }
 
-        // Tahunan
-        $yearlyLabels = [];
-        $yearlyValues = [];
-        for ($i = 2; $i >= 0; $i--) {
-            $year = Carbon::now()->subYears($i)->year;
-            $yearlyLabels[] = (string) $year;
-            $yearlyValues[] = Order::whereYear('created_at', $year)
-                ->where('status', '!=', 'pending')
-                ->sum('total_amount');
-        }
-
-        // Kategori
-        $categoryData = Category::withCount('products')->get();
-        $catLabels = $categoryData->pluck('name')->toArray();
-        $catValues = $categoryData->pluck('products_count')->toArray();
-
         // XGBoost prediction total
-        $predictedQuantity = null;
-        $predictionError = null;
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $predictedQuantity = 0;
+        $predictedMonth = Carbon::now()->addMonth()->locale('id_ID')->translatedFormat('F Y');
+        $predictedItemsCount = 0;
+        $predictionStatus = 'warning';
+        $predictionMessage = 'Prediksi XGBoost belum tersedia.';
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         try {
             $response = Http::timeout(30)->get("{$apiBase}/api/predict");
             if ($response->successful()) {
                 $data = $response->json();
                 $rawPredictions = $data['data'] ?? [];
-                $predictedQuantity = array_sum(array_column($rawPredictions, 'prediksi_pcs'));
+                $predictedMonth = $data['prediksi_bulan'] ?? $predictedMonth;
+
+                if (!empty($rawPredictions)) {
+                    $predictedQuantity = array_sum(array_column($rawPredictions, 'prediksi_pcs'));
+                    $predictedItemsCount = count($rawPredictions);
+                    $predictionStatus = 'success';
+                    $predictionMessage = "Prediksi produksi untuk {$predictedMonth}.";
+                } else {
+                    $predictionMessage = 'Prediksi XGBoost tidak tersedia saat ini.';
+                }
             } else {
-                $predictionError = 'Gagal memuat prediksi XGBoost. Status: ' . $response->status();
+                $predictionStatus = 'error';
+                $predictionMessage = 'Gagal memuat prediksi XGBoost. Status: ' . $response->status();
             }
         } catch (\Exception $e) {
-            $predictionError = 'Gagal menghubungi server ML: ' . $e->getMessage();
+            $predictionStatus = 'error';
+            $predictionMessage = 'Gagal menghubungi server ML: ' . $e->getMessage();
         }
 
         return view('admin.dashboard', compact(
-            'totalRevenue', 'totalOrders', 'totalProducts', 'totalUsers',
-            'monthlyLabels', 'monthlyValues', 'monthlyQuantityValues',
-            'yearlyLabels', 'yearlyValues',
-            'catLabels', 'catValues',
-            'predictedQuantity', 'predictionError'
+            'totalOrders', 'totalProducts', 'totalUsers',
+            'incomingMessagesThisWeek', 'newUsersThisWeek', 'newCustomerOrdersThisWeek',
+            'predictedQuantity', 'predictedMonth', 'predictedItemsCount',
+            'predictionStatus', 'predictionMessage'
         ));
     }
 
@@ -90,7 +91,7 @@ class AdminController extends Controller
         $historyError = null;
         $forecast = null;
         $forecastError = null;
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         $predictedMonth = null;
         try {
@@ -159,7 +160,7 @@ class AdminController extends Controller
         $evaluation = null;
         $evaluationError = null;
         $error = null;
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         try {
             $historyResponse = Http::timeout(10)->get("{$apiBase}/api/history");
@@ -227,7 +228,7 @@ class AdminController extends Controller
 
     public function reloadXgboost(Request $request)
     {
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
         $error = null;
 
         try {

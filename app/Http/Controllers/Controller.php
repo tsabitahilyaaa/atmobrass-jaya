@@ -93,7 +93,7 @@ abstract class Controller extends BaseController
     protected function fetchContentRecommendations(string $productName, int $limit = 4)
     {
         $recommended = collect();
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         try {
             $response = Http::timeout(5)->get($apiBase . '/api/recommend_by_name', [

@@ -11,7 +11,7 @@ class ProduksiController extends Controller
     {
         $prediksi = [];
         $error = null;
-        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+        $apiBase = config('ml.python_api_url', 'http://127.0.0.1:5000');
 
         try {
             $response = Http::timeout(10)->get("{$apiBase}/api/predict");
