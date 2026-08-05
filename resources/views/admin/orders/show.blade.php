@@ -235,7 +235,8 @@ $statusList = [
                 <div class="flex items-center gap-5">
 
                     <img
-                        src="{{ $item->product_image }}"
+                        src="{{ $item->product_image_url }}"
+                        alt="{{ $item->product_name }}"
                         class="w-20 h-20 rounded-xl object-cover border border-dark-300">
 
                     <div class="flex-1">

@@ -8,18 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('user_preferences', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('preference');
-            $table->timestamps();
+        if (!Schema::hasTable('user_preferences')) {
+            Schema::create('user_preferences', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->string('preference');
+                $table->timestamps();
 
-            $table->unique(['user_id', 'preference']);
-        });
+                $table->unique(['user_id', 'preference']);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('user_preferences');
+        if (Schema::hasTable('user_preferences')) {
+            Schema::dropIfExists('user_preferences');
+        }
     }
 };

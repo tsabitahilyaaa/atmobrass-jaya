@@ -118,7 +118,7 @@
                                 <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                     @foreach($order->items->take(3) as $item)
                                         <div class="bg-dark-200 border border-dark-300 rounded-xl p-3 flex items-center gap-3">
-                                            <img src="{{ $item->product_image }}" alt="{{ $item->product_name }}" class="w-16 h-16 rounded-lg object-cover">
+                                            <img src="{{ $item->product_image_url }}" alt="{{ $item->product_name }}" class="w-16 h-16 rounded-lg object-cover">
                                             <div class="min-w-0">
                                                 <p class="text-sm font-medium truncate">{{ $item->product_name }}</p>
                                                 <p class="text-xs text-muted">{{ $item->quantity }}x {{ $item->formatted_price }}</p>
