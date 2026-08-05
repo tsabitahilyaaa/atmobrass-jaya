@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 body {
     font-family: 'DM Sans', sans-serif;
@@ -111,10 +111,136 @@ body {
     animation: fadeUp 0.6s ease-out forwards;
 }
 
-.status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(18px) translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) translateY(0);
+    }
+}
+
+@keyframes toastOut {
+    from {
+        opacity: 1;
+        transform: translateX(0) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(18px) translateY(-4px);
+    }
+}
+
+.toast-surface {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 1rem 1rem 1rem 0.95rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(200, 169, 81, 0.24);
+    background: linear-gradient(135deg, rgba(27, 27, 27, 0.98), rgba(20, 20, 20, 0.96));
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.toast-enter {
+    animation: toastIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.toast-leaving {
+    animation: toastOut 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(200, 169, 81, 0.12);
+    color: #C8A951;
+    border: 1px solid rgba(200, 169, 81, 0.2);
+    font-size: 1rem;
+    margin-top: 0.08rem;
+}
+
+.toast-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #F8F4E8;
+    line-height: 1.25;
+}
+
+.toast-message {
+    margin-top: 0.2rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #B7B0A4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    margin-left: 0.35rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: none;
+    background: transparent;
+    color: #8C867B;
+    transition: all 180ms ease;
+}
+
+.toast-close:hover {
+    color: #F8F4E8;
+    background: rgba(255,255,255,0.04);
+}
+
+.toast-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+    color: #C8A951;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.toast-link:hover {
+    color: #E8D48B;
+}
+
+@media (max-width: 640px) {
+    .toast-surface {
+        padding: 0.9rem 0.9rem 0.9rem 0.85rem;
+    }
+
+    .toast-message {
+        white-space: normal;
+    }
+}
+
+..status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+.status-paid { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.status-processing { background: rgba(168,85,247,0.15); color: #a855f7; }
+.status-shipped { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+.status-completed { background: rgba(34,197,94,0.15); color: #22c55e; }
 .status-dibayar { background: rgba(59,130,246,0.15); color: #3b82f6; }
 .status-dikirim { background: rgba(168,85,247,0.15); color: #a855f7; }
 .status-selesai { background: rgba(34,197,94,0.15); color: #22c55e; }
+.status-cancelled { background: rgba(248,113,113,0.15); color: #f87171; }
 
 .line-clamp-2 {
     display: -webkit-box;

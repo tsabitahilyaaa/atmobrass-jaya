@@ -8,7 +8,15 @@
 
     <div class="flex flex-wrap gap-2 mb-8">
         @php
-            $statuses = ['all' => 'Semua', 'pending' => 'Pending', 'dibayar' => 'Dibayar', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai'];
+            $statuses = [
+                'all' => 'Semua',
+                'pending' => 'Pending',
+                'paid' => 'Dibayar',
+                'processing' => 'Diproses',
+                'shipped' => 'Dikirim',
+                'completed' => 'Selesai',
+                'cancelled' => 'Dibatalkan',
+            ];
         @endphp
         @foreach($statuses as $val => $label)
             <a href="{{ route('orders.index', ['status' => $val]) }}" class="px-4 py-2 rounded-full text-xs font-medium transition-all {{ $activeStatus === $val ? 'btn-gold' : 'bg-dark-100 border border-dark-300 text-muted hover:border-gold-dark' }}">{{ $label }}</a>
@@ -36,7 +44,7 @@
             <div class="flex flex-wrap gap-2 mb-3">
                 @foreach($order->items as $item)
                 <div class="flex items-center gap-2 bg-dark-200 rounded-lg px-3 py-2">
-                    <img src="{{ $item->product_image }}" class="w-10 h-10 rounded object-cover">
+                    <img src="{{ $item->product_image_url }}" alt="{{ $item->product_name }}" class="w-10 h-10 rounded object-cover">
                     <div>
                         <p class="text-xs font-medium">{{ $item->product_name }}</p>
                         <p class="text-xs text-muted">{{ $item->quantity }}x {{ $item->formatted_price }}</p>

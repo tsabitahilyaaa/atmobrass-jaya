@@ -41,80 +41,149 @@
 
                 @foreach($cartItems as $item)
 
-                <div class="bg-dark-100 border border-dark-300 rounded-xl p-4 flex gap-4 items-center">
+                <div class="bg-dark-100 border border-dark-300 rounded-xl p-4">
 
-                    <img
-                        src="{{ $item->image }}"
-                        alt="{{ $item->name }}"
-                        class="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                    >
+                    {{-- ================= DESKTOP ================= --}}
+                    <div class="hidden sm:flex items-center gap-4">
 
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-sm mb-1 truncate">
-                            {{ $item->name }}
-                        </h3>
+                        <img
+                            src="{{ $item->image }}"
+                            alt="{{ $item->name }}"
+                            class="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                        >
 
-                        <p class="text-gold text-sm font-bold">
-                            {{ $item->formatted_price }}
-                        </p>
-                    </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-sm mb-1 truncate">
+                                {{ $item->name }}
+                            </h3>
 
-                    <div class="flex items-center border border-dark-300 rounded-lg overflow-hidden">
-
-                        <form method="POST"
-                            action="{{ route('cart.decrease') }}">
-                            @csrf
-
-                            <input type="hidden"
-                                name="product_id"
-                                value="{{ $item->id }}">
-
-                            <button type="submit"
-                                    class="w-10 h-10 hover:bg-dark-200 transition">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </form>
-
-                        <div class="px-4 text-center min-w-[50px]">
-                            {{ $item->qty }}
+                            <p class="text-gold text-sm font-bold">
+                                {{ $item->formatted_price }}
+                            </p>
                         </div>
 
-                        <form method="POST"
-                            action="{{ route('cart.increase') }}">
-                            @csrf
+                        <div class="flex items-center border border-dark-300 rounded-lg overflow-hidden">
 
-                            <input type="hidden"
-                                name="product_id"
-                                value="{{ $item->id }}">
+                            <form method="POST" action="{{ route('cart.decrease') }}">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                <button type="submit" class="w-10 h-10 hover:bg-dark-200 transition">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </form>
 
-                            <button type="submit"
-                                    class="w-10 h-10 hover:bg-dark-200 transition">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </form>
+                            <div class="px-4 text-center min-w-[50px]">
+                                {{ $item->qty }}
+                            </div>
+
+                            <form method="POST" action="{{ route('cart.increase') }}">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                <button type="submit" class="w-10 h-10 hover:bg-dark-200 transition">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </form>
+
+                        </div>
+
+                        <div class="text-right flex-shrink-0 w-28">
+
+                            <p class="text-sm font-bold mb-1">
+                                {{ $item->formatted_subtotal }}
+                            </p>
+
+                            <form method="POST" action="{{ route('cart.remove') }}">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+
+                                <button
+                                    type="submit"
+                                    class="text-xs text-red-400 hover:text-red-300 transition-colors">
+
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Hapus
+
+                                </button>
+
+                            </form>
+
+                        </div>
 
                     </div>
 
-                    <div class="text-right flex-shrink-0 w-28">
+                    {{-- ================= MOBILE ================= --}}
+                    <div class="flex sm:hidden gap-3">
 
-                        <p class="text-sm font-bold mb-1">
-                            {{ $item->formatted_subtotal }}
-                        </p>
+                        {{-- Gambar --}}
+                        <img
+                            src="{{ $item->image }}"
+                            alt="{{ $item->name }}"
+                            class="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                        >
 
-                        <form method="POST"
-                              action="{{ route('cart.remove') }}">
-                            @csrf
+                        {{-- Informasi --}}
+                        <div class="flex-1 min-w-0">
 
-                            <input type="hidden"
-                                   name="product_id"
-                                   value="{{ $item->id }}">
+                            <h3 class="font-semibold text-sm leading-5">
+                                {{ $item->name }}
+                            </h3>
 
-                            <button type="submit"
-                                    class="text-xs text-red-400 hover:text-red-300 transition-colors">
-                                <i class="fas fa-trash mr-1"></i>
-                                Hapus
-                            </button>
-                        </form>
+                            <p class="text-gold text-sm font-bold mt-1">
+                                {{ $item->formatted_price }}
+                            </p>
+
+                            {{-- Qty --}}
+                            <div class="mt-2 flex items-center border border-dark-300 rounded-lg overflow-hidden w-fit">
+
+                                <form method="POST" action="{{ route('cart.decrease') }}">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $item->id }}">
+
+                                    <button type="submit" class="w-8 h-8 hover:bg-dark-200">
+                                        <i class="fas fa-minus text-xs"></i>
+                                    </button>
+                                </form>
+
+                                <div class="w-10 text-center text-sm">
+                                    {{ $item->qty }}
+                                </div>
+
+                                <form method="POST" action="{{ route('cart.increase') }}">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $item->id }}">
+
+                                    <button type="submit" class="w-8 h-8 hover:bg-dark-200">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                </form>
+
+                            </div>
+
+                            {{-- Harga + Hapus --}}
+                            <div class="flex items-center justify-between mt-3">
+
+                                <p class="font-semibold text-sm">
+                                    {{ $item->formatted_subtotal }}
+                                </p>
+
+                                <form method="POST" action="{{ route('cart.remove') }}">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $item->id }}">
+
+                                    <button
+                                        type="submit"
+                                        class="text-xs text-red-400 hover:text-red-300">
+
+                                        <i class="fas fa-trash mr-1"></i>
+                                        Hapus
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </div>
 
                     </div>
 

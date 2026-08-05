@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -13,43 +13,45 @@ class AuthController extends Controller
         if (auth()->check()) {
             return redirect()->route('home');
         }
+
         return view('auth.login');
     }
 
     public function login(Request $request)
-{
-    $credentials = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string',
-    ]);
-
-    if (!Auth::attempt($credentials, $request->filled('remember'))) {
-
-        return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->withInput($request->only('email'));
-    }
-
-    $request->session()->regenerate();
-
-    // Jika ternyata admin login lewat halaman customer
-    if (Auth::user()->role === 'admin') {
-
-        Auth::logout();
-
-        return back()->withErrors([
-            'email' => 'Administrator harus login melalui Portal Admin.',
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
-    }
 
-    return redirect()->intended(route('home'));
-}
+        if (! Auth::attempt($credentials, $request->filled('remember'))) {
+            return back()->withErrors([
+                'email' => 'Email atau password salah.',
+            ])->withInput($request->only('email'));
+        }
+
+        $request->session()->regenerate();
+
+        if (Auth::user()->role === 'admin') {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Administrator harus login melalui Portal Admin.',
+            ]);
+        }
+
+        $this->transferSessionCartToUserCart(Auth::user());
+        $this->transferGuestPreferencesToUserPreferences(Auth::user());
+
+        return redirect()->intended(route('home'));
+    }
 
     public function registerForm()
     {
         if (auth()->check()) {
             return redirect()->route('home');
         }
+
         return view('auth.register');
     }
 
@@ -59,20 +61,20 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
-            'phone' => $validated['phone'] ?? null,
             'role' => 'customer',
         ]);
 
         Auth::login($user);
+        $this->transferSessionCartToUserCart($user);
+        $this->transferGuestPreferencesToUserPreferences($user);
 
-        return redirect()->route('home')->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . '.');
+        return redirect()->intended(route('home'))->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . '.');
     }
 
     public function logout(Request $request)
@@ -82,5 +84,49 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home')->with('success', 'Berhasil logout.');
+    }
+
+    private function transferSessionCartToUserCart(User $user): void
+    {
+        $sessionCart = session('cart', []);
+
+        if (empty($sessionCart)) {
+            return;
+        }
+
+        $cart = $user->cart()->firstOrCreate(['user_id' => $user->id]);
+
+        foreach ($sessionCart as $productId => $quantity) {
+            $existingItem = $cart->items()->where('product_id', $productId)->first();
+            $newQuantity = ($existingItem ? $existingItem->quantity : 0) + (int) $quantity;
+
+            if ($existingItem) {
+                $existingItem->update(['quantity' => $newQuantity]);
+            } else {
+                $cart->items()->create([
+                    'product_id' => $productId,
+                    'quantity' => $newQuantity,
+                ]);
+            }
+        }
+
+        session()->forget('cart');
+    }
+
+    private function transferGuestPreferencesToUserPreferences(User $user): void
+    {
+        $guestPreferences = session('guest_preferences', []);
+
+        if (empty($guestPreferences)) {
+            return;
+        }
+
+        foreach (array_unique($guestPreferences) as $preference) {
+            $user->preferences()->firstOrCreate([
+                'preference' => $preference,
+            ]);
+        }
+
+        session()->forget('guest_preferences');
     }
 }

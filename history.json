@@ -1,0 +1,511 @@
+﻿{
+    "monthly_sales":  [
+                          {
+                              "month":  "Januari",
+                              "month_num":  1,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  16
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-008",
+                                                   "nama_produk":  "Handle Laci",
+                                                   "quantity":  7
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  5
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  15
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  9
+                                               }
+                                           ],
+                              "total":  86
+                          },
+                          {
+                              "month":  "Februari",
+                              "month_num":  2,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-001",
+                                                   "nama_produk":  "Accecoris Katak",
+                                                   "quantity":  15
+                                               },
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  3
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  10
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  3
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-008",
+                                                   "nama_produk":  "Handle Laci",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  9
+                                               },
+                                               {
+                                                   "id_produk":  "HW-011",
+                                                   "nama_produk":  "Kotak Kuningan",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  1
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  20
+                                               }
+                                           ],
+                              "total":  95
+                          },
+                          {
+                              "month":  "Maret",
+                              "month_num":  3,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-001",
+                                                   "nama_produk":  "Accecoris Katak",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-004",
+                                                   "nama_produk":  "Engsel Kepala Antiq",
+                                                   "quantity":  2
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  13
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  5
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  12
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  7
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  2
+                                               }
+                                           ],
+                              "total":  91
+                          },
+                          {
+                              "month":  "April",
+                              "month_num":  4,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-001",
+                                                   "nama_produk":  "Accecoris Katak",
+                                                   "quantity":  10
+                                               },
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  9
+                                               },
+                                               {
+                                                   "id_produk":  "HW-004",
+                                                   "nama_produk":  "Engsel Kepala Antiq",
+                                                   "quantity":  12
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  2
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  2
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  7
+                                               },
+                                               {
+                                                   "id_produk":  "HW-008",
+                                                   "nama_produk":  "Handle Laci",
+                                                   "quantity":  3
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  16
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  11
+                                               },
+                                               {
+                                                   "id_produk":  "HW-011",
+                                                   "nama_produk":  "Kotak Kuningan",
+                                                   "quantity":  26
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  6
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  15
+                                               }
+                                           ],
+                              "total":  133
+                          },
+                          {
+                              "month":  "Mei",
+                              "month_num":  5,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  3
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  2
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  15
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  16
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-011",
+                                                   "nama_produk":  "Kotak Kuningan",
+                                                   "quantity":  20
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  5
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  15
+                                               }
+                                           ],
+                              "total":  102
+                          },
+                          {
+                              "month":  "Juni",
+                              "month_num":  6,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-001",
+                                                   "nama_produk":  "Accecoris Katak",
+                                                   "quantity":  21
+                                               },
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  5
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  25
+                                               },
+                                               {
+                                                   "id_produk":  "HW-004",
+                                                   "nama_produk":  "Engsel Kepala Antiq",
+                                                   "quantity":  19
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  14
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  13
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  5
+                                               },
+                                               {
+                                                   "id_produk":  "HW-008",
+                                                   "nama_produk":  "Handle Laci",
+                                                   "quantity":  18
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  17
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  36
+                                               },
+                                               {
+                                                   "id_produk":  "HW-011",
+                                                   "nama_produk":  "Kotak Kuningan",
+                                                   "quantity":  2
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  8
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  22
+                                               }
+                                           ],
+                              "total":  205
+                          },
+                          {
+                              "month":  "Juli",
+                              "month_num":  7,
+                              "products":  [
+                                               {
+                                                   "id_produk":  "HW-001",
+                                                   "nama_produk":  "Accecoris Katak",
+                                                   "quantity":  19
+                                               },
+                                               {
+                                                   "id_produk":  "HW-002",
+                                                   "nama_produk":  "Bintang",
+                                                   "quantity":  29
+                                               },
+                                               {
+                                                   "id_produk":  "HW-003",
+                                                   "nama_produk":  "Engsel Jahit",
+                                                   "quantity":  7
+                                               },
+                                               {
+                                                   "id_produk":  "HW-004",
+                                                   "nama_produk":  "Engsel Kepala Antiq",
+                                                   "quantity":  4
+                                               },
+                                               {
+                                                   "id_produk":  "HW-005",
+                                                   "nama_produk":  "Engsel Tombak",
+                                                   "quantity":  12
+                                               },
+                                               {
+                                                   "id_produk":  "HW-006",
+                                                   "nama_produk":  "Handle Arsip Kuningan",
+                                                   "quantity":  21
+                                               },
+                                               {
+                                                   "id_produk":  "HW-007",
+                                                   "nama_produk":  "Handle Kuningan",
+                                                   "quantity":  54
+                                               },
+                                               {
+                                                   "id_produk":  "HW-008",
+                                                   "nama_produk":  "Handle Laci",
+                                                   "quantity":  11
+                                               },
+                                               {
+                                                   "id_produk":  "HW-009",
+                                                   "nama_produk":  "Handle Peti",
+                                                   "quantity":  10
+                                               },
+                                               {
+                                                   "id_produk":  "HW-010",
+                                                   "nama_produk":  "Hanger Kapstok",
+                                                   "quantity":  16
+                                               },
+                                               {
+                                                   "id_produk":  "HW-011",
+                                                   "nama_produk":  "Kotak Kuningan",
+                                                   "quantity":  12
+                                               },
+                                               {
+                                                   "id_produk":  "HW-012",
+                                                   "nama_produk":  "Roda Troli Alumunium",
+                                                   "quantity":  18
+                                               },
+                                               {
+                                                   "id_produk":  "HW-013",
+                                                   "nama_produk":  "Roda Troli Kuningan",
+                                                   "quantity":  15
+                                               }
+                                           ],
+                              "total":  228
+                          },
+                          {
+                              "month":  "Agustus",
+                              "month_num":  8,
+                              "products":  [
+
+                                           ],
+                              "total":  0
+                          },
+                          {
+                              "month":  "September",
+                              "month_num":  9,
+                              "products":  [
+
+                                           ],
+                              "total":  0
+                          },
+                          {
+                              "month":  "Oktober",
+                              "month_num":  10,
+                              "products":  [
+
+                                           ],
+                              "total":  0
+                          },
+                          {
+                              "month":  "November",
+                              "month_num":  11,
+                              "products":  [
+
+                                           ],
+                              "total":  0
+                          },
+                          {
+                              "month":  "Desember",
+                              "month_num":  12,
+                              "products":  [
+
+                                           ],
+                              "total":  0
+                          }
+                      ],
+    "selected_year":  2026,
+    "status":  "success",
+    "summary":  {
+                    "average":  134,
+                    "highest_month":  "Juli",
+                    "highest_value":  228,
+                    "lowest_month":  "Januari",
+                    "lowest_value":  86,
+                    "total":  940
+                },
+    "years":  [
+                  2026,
+                  2025,
+                  2024,
+                  2023,
+                  2022,
+                  2021
+              ]
+}

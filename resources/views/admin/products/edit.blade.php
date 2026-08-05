@@ -9,12 +9,6 @@
     <form method="POST" action="{{ route('admin.products.update', $product->id) }}" class="bg-dark-100 border border-dark-300 rounded-xl p-6 space-y-4">
         @csrf @method('PUT')
 
-        @if($errors->any())
-            <div class="bg-red-900/30 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm space-y-1">
-                @foreach($errors->all() as $err)<p>{{ $err }}</p>@endforeach
-            </div>
-        @endif
-
         <div>
             <label class="text-xs text-muted mb-1 block">Nama Produk</label>
             <input type="text" name="name" value="{{ old('name', $product->name) }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm">

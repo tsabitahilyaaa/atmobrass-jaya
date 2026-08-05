@@ -15,14 +15,6 @@
     <form method="POST" action="{{ route('register.post') }}" class="bg-dark-100 border border-dark-300 rounded-xl p-6 sm:p-8 space-y-4">
         @csrf
 
-        @if($errors->any())
-            <div class="bg-red-900/30 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm space-y-1">
-                @foreach($errors->all() as $err)
-                    <p>{{ $err }}</p>
-                @endforeach
-            </div>
-        @endif
-
         <div>
             <label class="text-xs text-muted mb-1 block">Nama Lengkap</label>
             <input type="text" name="name" value="{{ old('name') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="Nama Anda">
@@ -30,10 +22,6 @@
         <div>
             <label class="text-xs text-muted mb-1 block">Email</label>
             <input type="email" name="email" value="{{ old('email') }}" required class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="email@contoh.com">
-        </div>
-        <div>
-            <label class="text-xs text-muted mb-1 block">No. Telepon</label>
-            <input type="tel" name="phone" value="{{ old('phone') }}" class="input-dark w-full px-4 py-3 rounded-lg text-sm" placeholder="08xxxxxxxxxx">
         </div>
         <div>
             <label class="text-xs text-muted mb-1 block">Password</label>

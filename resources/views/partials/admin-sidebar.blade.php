@@ -1,11 +1,19 @@
 @php
- $r = Request::path();
- $dash = $r === 'admin';
- $prods = str_contains($r, 'admin/produk');
- $lstm = str_contains($r, 'admin/lstm');
- $msgs = str_contains($r, 'admin/pesan');
- $ords = str_contains($r, 'admin/pesanan');
- $usrs = str_contains($r, 'admin/pengguna');
+    $r = Request::path();
+
+    $dash    = $r === 'admin';
+    $prods   = str_starts_with($r, 'admin/produk');
+    $pay     = str_starts_with($r, 'admin/pembayaran');
+    $lstm    = str_starts_with($r, 'admin/xgboost');
+    $history = str_starts_with($r, 'admin/history');
+
+    $msgs = $r === 'admin/pesan'
+          || str_starts_with($r, 'admin/pesan/');
+
+    $ords = $r === 'admin/pesanan'
+          || str_starts_with($r, 'admin/pesanan/');
+
+    $usrs = str_starts_with($r, 'admin/pengguna');
 @endphp
 <aside class="hidden md:flex fixed top-0 left-0 w-64 flex-col bg-dark-100 border-r border-dark-300" style="height:100vh;z-index:30;">
     <div class="p-6 border-b border-dark-300">
@@ -16,18 +24,24 @@
             <span class="font-display font-bold gold-gradient">Admin Panel</span>
         </div>
     </div>
-    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+    <nav class="flex-1 p-4 space-y-1">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $dash ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-chart-line w-5"></i>Dashboard
         </a>
         <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $prods ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-boxes-stacked w-5"></i>Produk
         </a>
-        <a href="{{ route('admin.lstm') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $lstm ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
-            <i class="fas fa-brain w-5"></i>Prediksi LSTM
+        <a href="{{ route('admin.xgboost') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $lstm ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-brain w-5"></i>Prediksi XGBoost
+        </a>
+        <a href="{{ route('admin.history') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $history ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-clock-rotate-left w-5"></i>Riwayat Penjualan
         </a>
         <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $msgs ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-envelope-open-text w-5"></i>Pesan
+        </a>
+        <a href="{{ route('admin.payment') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $pay ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
+            <i class="fas fa-qrcode w-5"></i>Pembayaran
         </a>
         <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ $ords ? 'bg-gold/10 text-gold' : 'text-muted hover:text-gold' }}">
             <i class="fas fa-shopping-bag w-5"></i>Pesanan

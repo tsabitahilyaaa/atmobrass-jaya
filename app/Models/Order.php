@@ -11,9 +11,19 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'address_id',
         'order_number',
         'status',
+        'payment_method',
+        'payment_amount',
+        'payment_proof',
+        'payment_status',
         'total_amount',
+        'shipping_name',
+        'shipping_email',
+        'shipping_phone',
+        'shipping_city',
+        'shipping_postal',
         'shipping_address',
         'notes',
         'ordered_at',
@@ -23,6 +33,7 @@ class Order extends Model
     {
         return [
             'total_amount' => 'decimal:2',
+            'payment_amount' => 'decimal:2',
             'ordered_at' => 'datetime',
         ];
     }

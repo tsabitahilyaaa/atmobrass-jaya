@@ -24,12 +24,26 @@ class AdminOrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:pending,dibayar,dikirim,selesai',
+            'status' => 'required|in:pending,paid,processing,shipped,completed,cancelled',
         ]);
 
-        $order->update(['status' => $request->input('status')]);
+        // Tidak boleh mengubah status menjadi "paid"
+        // jika pembayaran belum diverifikasi
+        if ($request->status == 'paid' && $order->payment_status != 'verified') {
+            return back()->with(
+                'error',
+                'Pembayaran harus diverifikasi terlebih dahulu.'
+            );
+        }
 
-        return back()->with('success', 'Status pesanan diperbarui.');
+        $order->update([
+            'status' => $request->status,
+        ]);
+
+        return back()->with(
+            'success',
+            'Status pesanan diperbarui.'
+        );
     }
 
     public function destroy($id)
@@ -43,5 +57,27 @@ class AdminOrderController extends Controller
     {
         $order = Order::with(['user', 'items'])->findOrFail($id);
         return view('admin.orders.show', compact('order'));
+    }
+    public function verify($id)
+    {
+        $order = Order::findOrFail($id);
+
+        $order->update([
+            'payment_status' => 'verified',
+            'status' => 'paid',
+        ]);
+
+        return back()->with('success', 'Pembayaran berhasil diverifikasi.');
+    }
+    
+    public function reject($id)
+    {
+        $order = Order::findOrFail($id);
+
+        $order->update([
+            'payment_status' => 'rejected',
+        ]);
+
+        return back()->with('success', 'Pembayaran ditolak.');
     }
 }

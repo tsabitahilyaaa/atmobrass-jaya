@@ -14,9 +14,12 @@
         <span class="text-gold">{{ $product->name }}</span>
     </nav>
 
-    <div class="grid md:grid-cols-2 gap-8 sm:gap-12 mb-16">
-        <div class="rounded-xl overflow-hidden border border-dark-300 aspect-square bg-dark-200">
-            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+    <div class="grid md:grid-cols-2 gap-8 sm:gap-12 mb-16 items-start">
+        <div class="rounded-xl overflow-hidden border border-dark-300 bg-dark-200
+                    w-full max-w-[500px] aspect-square mx-auto">
+            <img src="{{ asset($product->image) }}"
+                alt="{{ $product->name }}"
+                class="w-full h-full object-cover">
         </div>
 
         <div>
@@ -34,24 +37,23 @@
             </div>
 
             @if($product->stock > 0)
-                <div class="mb-6">
-                    <form method="POST" action="{{ route('order.quick') }}" class="space-y-3 bg-dark-100 border border-dark-300 rounded-lg p-4">
+                <div class="mb-6 rounded-xl border border-dark-300 bg-dark-100 p-4">
+                    <form method="POST" action="{{ route('cart.add') }}" class="space-y-4">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}" />
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-xs text-muted">Nama</label><input type="text" name="name" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Nama Anda"></div>
-                            <div><label class="text-xs text-muted">Email</label><input type="email" name="email" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="email@contoh.com"></div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-muted">Jumlah</span>
+                            <div class="flex items-center border border-dark-300 rounded-lg overflow-hidden">
+                                <button type="button" class="quantity-btn w-10 h-10 hover:bg-dark-200 transition" data-action="minus">-</button>
+                                <input id="quantity-input" type="number" name="qty" min="1" max="{{ $product->stock }}" value="1" class="w-16 h-10 text-center bg-transparent outline-none" />
+                                <button type="button" class="quantity-btn w-10 h-10 hover:bg-dark-200 transition" data-action="plus">+</button>
+                            </div>
                         </div>
-                        <div><label class="text-xs text-muted">Telepon</label><input type="tel" name="phone" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="08xxxxxxxxxx"></div>
-                        <div><label class="text-xs text-muted">Alamat Pengiriman</label><input type="text" name="address" required class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Alamat lengkap"></div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-xs text-muted">Jumlah</label><input type="number" name="quantity" min="1" value="1" required class="input-dark w-full px-3 py-2 rounded-lg text-sm"></div>
-                            <div><label class="text-xs text-muted">Catatan (opsional)</label><input type="text" name="notes" class="input-dark w-full px-3 py-2 rounded-lg text-sm" placeholder="Ukuran / finishing / catatan"></div>
+                        <div class="flex items-center justify-between border-t border-dark-300 pt-4">
+                            <span class="text-sm text-muted">Subtotal</span>
+                            <span id="subtotal-display" class="text-gold font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex gap-2 items-center">
-                            <button type="submit" class="btn-gold px-6 py-2 rounded-lg">Pesan Sekarang</button>
-                            <span class="text-sm text-muted">Atau hubungi WA: <a href="https://wa.me/6285229269792" class="text-gold">+62 852-2926-9792</a></span>
-                        </div>
+                        <button type="submit" class="btn-gold w-full py-3 rounded-lg">Tambah ke Keranjang</button>
                     </form>
                 </div>
             @else
@@ -60,20 +62,10 @@
         </div>
     </div>
 
-    @if($related->count() > 0)
-    <div>
-        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Produk Terkait</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            @foreach($related as $rp)
-                @include('partials.product-card', ['product' => $rp])
-            @endforeach
-        </div>
-    </div>
-    @endif
 
     @if(isset($recommendedContent) && $recommendedContent->count() > 0)
     <div class="mt-12">
-        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Rekomendasi Mirip (Content‑Based)</h2>
+        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Rekomendasi Produk Untuk Anda</h2>
         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             @foreach($recommendedContent as $rp)
                 @include('partials.product-card', ['product' => $rp])
@@ -82,4 +74,36 @@
     </div>
     @endif
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('quantity-input');
+        const subtotal = document.getElementById('subtotal-display');
+        const price = {{ $product->price }};
+        const maxStock = {{ $product->stock }};
+
+        function syncSubtotal() {
+            let value = parseInt(input.value || 1, 10);
+            if (Number.isNaN(value) || value < 1) value = 1;
+            if (value > maxStock) value = maxStock;
+            input.value = value;
+            subtotal.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(price * value);
+        }
+
+        document.querySelectorAll('.quantity-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                let value = parseInt(input.value || 1, 10);
+                if (button.dataset.action === 'plus') value += 1;
+                if (button.dataset.action === 'minus') value -= 1;
+                if (value < 1) value = 1;
+                if (value > maxStock) value = maxStock;
+                input.value = value;
+                syncSubtotal();
+            });
+        });
+
+        input.addEventListener('input', syncSubtotal);
+        syncSubtotal();
+    });
+</script>
 @endsection

@@ -2,49 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
     public function index()
     {
-        $cart = session()->get('cart', []);
+        $cartData = $this->getCartItems();
+        $cartItems = $cartData['items'];
+        $total = $cartData['total'];
+        $formattedTotal = $cartData['formatted_total'];
 
-        $total = 0;
-        $cartItems = [];
-
-        foreach ($cart as $id => $qty) {
-
-            $product = Product::find($id);
-
-            if ($product) {
-
-                $subtotal = $product->price * $qty;
-
-                $cartItems[] = (object) [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => $product->price,
-                    'formatted_price' => 'Rp ' . number_format($product->price, 0, ',', '.'),
-                    'image' => $product->image,
-                    'stock' => $product->stock,
-                    'qty' => $qty,
-                    'subtotal' => $subtotal,
-                    'formatted_subtotal' => 'Rp ' . number_format($subtotal, 0, ',', '.'),
-                ];
-
-                $total += $subtotal;
-            }
+        $recommendedContent = collect();
+        if (! empty($cartItems)) {
+            $referenceProduct = end($cartItems);
+            $recommendedContent = $this->fetchContentRecommendations($referenceProduct->name, 4);
         }
 
-        $formattedTotal = 'Rp ' . number_format($total, 0, ',', '.');
-
-        return view('cart.index', compact(
-            'cartItems',
-            'total',
-            'formattedTotal'
-        ));
+        return view('cart.index', compact('cartItems', 'total', 'formattedTotal', 'recommendedContent'));
     }
 
     public function add(Request $request)
@@ -55,20 +31,41 @@ class CartController extends Controller
         ]);
 
         $product = Product::findOrFail($request->product_id);
+        $requestedQty = max(1, (int) $request->qty);
 
-        $cart = session()->get('cart', []);
-
-        if (isset($cart[$product->id])) {
-            $cart[$product->id] += $request->qty;
-        } else {
-            $cart[$product->id] = $request->qty;
+        if ($product->stock < $requestedQty) {
+            return back()->with('error', 'Stok produk ' . $product->name . ' tidak mencukupi.');
         }
 
-        session()->put('cart', $cart);
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->firstOrCreate(['user_id' => auth()->id()]);
+            $cartItem = $cart->items()->where('product_id', $product->id)->first();
+            $newQuantity = ($cartItem ? $cartItem->quantity : 0) + $requestedQty;
 
-        return redirect()
-            ->route('cart.index')
-            ->with('success', 'Produk berhasil ditambahkan ke keranjang.');
+            if ($newQuantity > $product->stock) {
+                $newQuantity = $product->stock;
+            }
+
+            if ($cartItem) {
+                $cartItem->update(['quantity' => $newQuantity]);
+            } else {
+                $cart->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $newQuantity,
+                ]);
+            }
+
+            session()->forget('cart');
+        } else {
+            $cart = session()->get('cart', []);
+            $existingQty = (int) ($cart[$product->id] ?? 0);
+            $cart[$product->id] = min($existingQty + $requestedQty, $product->stock);
+            session()->put('cart', $cart);
+        }
+
+        return back()
+            ->with('success', 'Produk berhasil ditambahkan ke keranjang.')
+            ->with('cart_link', route('cart.index'));
     }
 
     public function update(Request $request)
@@ -78,48 +75,71 @@ class CartController extends Controller
             'qty' => 'required|integer|min:1',
         ]);
 
-        $cart = session()->get('cart', []);
+        $product = Product::findOrFail($request->product_id);
+        $quantity = min(max(1, (int) $request->qty), $product->stock);
 
-        if (isset($cart[$request->product_id])) {
-            $cart[$request->product_id] = $request->qty;
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->first();
+
+            if ($cart) {
+                $cartItem = $cart->items()->where('product_id', $product->id)->first();
+
+                if ($cartItem) {
+                    $cartItem->update(['quantity' => $quantity]);
+                }
+            }
+        } else {
+            $cart = session()->get('cart', []);
+            $cart[$product->id] = $quantity;
+            session()->put('cart', $cart);
         }
 
-        session()->put('cart', $cart);
-
-        return redirect()
-            ->route('cart.index')
-            ->with('success', 'Jumlah produk berhasil diperbarui.');
+        return redirect()->route('cart.index')->with('success', 'Jumlah produk berhasil diperbarui.');
     }
 
     public function remove(Request $request)
     {
-        $cart = session()->get('cart', []);
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->first();
 
-        if (isset($cart[$request->product_id])) {
+            if ($cart) {
+                $cart->items()->where('product_id', $request->product_id)->delete();
+            }
+        } else {
+            $cart = session()->get('cart', []);
             unset($cart[$request->product_id]);
+            session()->put('cart', $cart);
         }
 
-        session()->put('cart', $cart);
-
-        return redirect()
-            ->route('cart.index')
-            ->with('success', 'Produk berhasil dihapus dari keranjang.');
+        return redirect()->route('cart.index')->with('success', 'Produk berhasil dihapus dari keranjang.');
     }
+
     public function increase(Request $request)
     {
         $productId = $request->product_id;
+        $product = Product::find($productId);
 
-        $cart = session()->get('cart', []);
+        if (! $product) {
+            return back();
+        }
 
-        if (isset($cart[$productId])) {
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->first();
 
-            $product = Product::find($productId);
+            if ($cart) {
+                $cartItem = $cart->items()->where('product_id', $productId)->first();
 
-            if ($cart[$productId] < $product->stock) {
-                $cart[$productId]++;
+                if ($cartItem && $cartItem->quantity < $product->stock) {
+                    $cartItem->update(['quantity' => $cartItem->quantity + 1]);
+                }
             }
+        } else {
+            $cart = session()->get('cart', []);
 
-            session()->put('cart', $cart);
+            if (isset($cart[$productId]) && $cart[$productId] < $product->stock) {
+                $cart[$productId]++;
+                session()->put('cart', $cart);
+            }
         }
 
         return back();
@@ -129,17 +149,34 @@ class CartController extends Controller
     {
         $productId = $request->product_id;
 
-        $cart = session()->get('cart', []);
+        if (auth()->check()) {
+            $cart = auth()->user()->cart()->first();
 
-        if (isset($cart[$productId])) {
+            if ($cart) {
+                $cartItem = $cart->items()->where('product_id', $productId)->first();
 
-            $cart[$productId]--;
+                if ($cartItem) {
+                    $newQuantity = $cartItem->quantity - 1;
 
-            if ($cart[$productId] <= 0) {
-                unset($cart[$productId]);
+                    if ($newQuantity <= 0) {
+                        $cartItem->delete();
+                    } else {
+                        $cartItem->update(['quantity' => $newQuantity]);
+                    }
+                }
             }
+        } else {
+            $cart = session()->get('cart', []);
 
-            session()->put('cart', $cart);
+            if (isset($cart[$productId])) {
+                $cart[$productId]--;
+
+                if ($cart[$productId] <= 0) {
+                    unset($cart[$productId]);
+                }
+
+                session()->put('cart', $cart);
+            }
         }
 
         return back();

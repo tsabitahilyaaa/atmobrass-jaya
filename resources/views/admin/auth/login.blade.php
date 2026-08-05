@@ -33,18 +33,6 @@
 
             @csrf
 
-            @if(session('error'))
-                <div class="bg-red-900/30 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg text-sm">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            @if($errors->any())
-                <div class="bg-red-900/30 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg text-sm">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
             <div>
 
                 <label class="block text-xs text-muted mb-2">

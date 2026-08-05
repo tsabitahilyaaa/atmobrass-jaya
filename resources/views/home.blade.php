@@ -3,6 +3,21 @@
 @section('title', 'Beranda — CV Atmobrass Jaya')
 
 @section('content')
+@if(session('preference_reset_banner'))
+<section class="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+    <div class="bg-dark-100 border border-dark-300 rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold text-white">Preferensi Anda telah direset.</p>
+            <p class="text-sm text-muted mt-1">Pilih rekomendasi baru kapan saja untuk mendapatkan saran yang lebih sesuai.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('preferences.index') }}" class="btn-gold px-6 py-3 rounded-lg text-sm inline-block">Pilih Sekarang</a>
+            <a href="{{ route('home', ['dismiss_preference_banner' => 1]) }}" class="btn-outline px-6 py-3 rounded-lg text-sm inline-block">Nanti Saja</a>
+        </div>
+    </div>
+</section>
+@endif
+
 <section class="relative min-h-[90vh] flex items-center hero-pattern overflow-hidden">
     <div class="absolute top-20 right-10 w-64 h-64 rounded-full opacity-10 gold-bg blur-[100px] float-anim"></div>
     <div class="absolute bottom-20 left-10 w-48 h-48 rounded-full opacity-5 gold-bg blur-[80px] float-anim" style="animation-delay:2s"></div>
@@ -22,6 +37,23 @@
         </div>
     </div>
 </section>
+
+@if($recommendedProducts->isNotEmpty())
+<section class="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4 anim-scroll">
+        <div>
+            <p class="text-gold text-sm font-semibold tracking-widest uppercase mb-3">Personalized</p>
+            <h2 class="font-display font-bold text-2xl sm:text-3xl">Recommended For You</h2>
+        </div>
+        <a href="{{ route('products.index') }}" class="btn-outline px-6 py-2 rounded-lg text-sm inline-block">Lihat Semua <i class="fas fa-arrow-right ml-2 text-xs"></i></a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 anim-scroll">
+        @foreach($recommendedProducts as $product)
+            @include('partials.product-card', ['product' => $product])
+        @endforeach
+    </div>
+</section>
+@endif
 
 <section class="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
     <div class="text-center mb-12 anim-scroll">
@@ -88,14 +120,7 @@
     </div>
 </section>
 
-<section class="py-16 sm:py-20 bg-dark-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center anim-scroll">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">5+</p><p class="text-sm text-muted">Tahun Pengalaman</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">5000+</p><p class="text-sm text-muted">Produk Terjual</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">800+</p><p class="text-sm text-muted">Pelanggan Puas</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">4</p><p class="text-sm text-muted">Kategori Produk</p></div>
-        </div>
-    </div>
-</section>
+@if($showPreferenceModal)
+    @include('components.preference-onboarding-modal')
+@endif
 @endsection
