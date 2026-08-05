@@ -120,17 +120,6 @@
     </div>
 </section>
 
-<section class="py-16 sm:py-20 bg-dark-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center anim-scroll">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">5+</p><p class="text-sm text-muted">Tahun Pengalaman</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">5000+</p><p class="text-sm text-muted">Produk Terjual</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">800+</p><p class="text-sm text-muted">Pelanggan Puas</p></div>
-            <div><p class="font-display font-bold text-3xl sm:text-4xl gold-gradient mb-1">4</p><p class="text-sm text-muted">Kategori Produk</p></div>
-        </div>
-    </div>
-</section>
-
 @if($showPreferenceModal)
     @include('components.preference-onboarding-modal')
 @endif

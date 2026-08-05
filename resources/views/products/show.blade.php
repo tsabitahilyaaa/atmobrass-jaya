@@ -14,9 +14,12 @@
         <span class="text-gold">{{ $product->name }}</span>
     </nav>
 
-    <div class="grid md:grid-cols-2 gap-8 sm:gap-12 mb-16">
-        <div class="rounded-xl overflow-hidden border border-dark-300 aspect-square bg-dark-200">
-            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+    <div class="grid md:grid-cols-2 gap-8 sm:gap-12 mb-16 items-start">
+        <div class="rounded-xl overflow-hidden border border-dark-300 bg-dark-200
+                    w-full max-w-[500px] aspect-square mx-auto">
+            <img src="{{ asset($product->image) }}"
+                alt="{{ $product->name }}"
+                class="w-full h-full object-cover">
         </div>
 
         <div>
@@ -59,20 +62,10 @@
         </div>
     </div>
 
-    @if($related->count() > 0)
-    <div>
-        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Produk Terkait</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            @foreach($related as $rp)
-                @include('partials.product-card', ['product' => $rp])
-            @endforeach
-        </div>
-    </div>
-    @endif
 
     @if(isset($recommendedContent) && $recommendedContent->count() > 0)
     <div class="mt-12">
-        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Rekomendasi Mirip (Content‑Based)</h2>
+        <h2 class="font-display font-bold text-xl sm:text-2xl mb-6">Rekomendasi Produk Untuk Anda</h2>
         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             @foreach($recommendedContent as $rp)
                 @include('partials.product-card', ['product' => $rp])

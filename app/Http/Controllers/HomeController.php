@@ -5,17 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class HomeController extends Controller
 {
-    protected array $preferenceKeywords = [
-        'Pintu Rumah' => ['pintu', 'engsel', 'handle', 'kunci', 'door'],
-        'Lemari & Kabinet' => ['lemari', 'kabinet', 'rak', 'laci', 'cabinet', 'wardrobe'],
-        'Furniture' => ['furniture', 'meja', 'kursi', 'kursi', 'perabot', 'furnitur'],
-        'Kantor & Bangunan Komersial' => ['kantor', 'office', 'bangunan', 'komersial', 'commercial'],
-        'Dekorasi Interior' => ['dekor', 'interior', 'lampu', 'ornamen', 'dekoratif'],
-        'Renovasi & Proyek Bangunan' => ['renovasi', 'proyek', 'bangunan', 'building', 'project'],
-    ];
+
 
     public function index(Request $request)
     {
@@ -61,34 +55,43 @@ class HomeController extends Controller
     protected function buildRecommendedProducts(array $preferences)
     {
         if (empty($preferences)) {
-            return collect();
-        }
+                return collect();
+            }
 
-        $products = Product::with('category')->where('is_active', true)->get();
-        $scoredProducts = [];
+            $preferenceText = collect($preferences)
+                ->implode(' ');
 
-        foreach ($products as $product) {
-            $score = 0;
-            $haystack = strtolower($product->name . ' ' . $product->description . ' ' . ($product->category?->name ?? ''));
+            if (empty($preferenceText)) {
+                return collect();
+            }
 
-            foreach ($preferences as $preference) {
-                foreach ($this->preferenceKeywords[$preference] ?? [] as $keyword) {
-                    if (str_contains($haystack, strtolower($keyword))) {
-                        $score++;
+        $apiBase = config('app.python_api_url', 'http://127.0.0.1:5000');
+
+        try {
+            $resp = Http::timeout(5)->get($apiBase . '/api/recommend_by_preferences', [
+                'preference' => $preferenceText,
+                'n' => 4,
+            ]);
+
+            if ($resp->successful()) {
+                $recommended = collect();
+                foreach ($resp->json('data', []) as $rec) {
+                    $p = Product::where('name', $rec['nama_produk'] ?? '')->first();
+                    if ($p) {
+                        $recommended->push($p);
                     }
                 }
+                if ($recommended->isNotEmpty()) {
+                    return $recommended;
+                }
             }
-
-            if ($score > 0) {
-                $scoredProducts[] = [
-                    'product' => $product,
-                    'score' => $score,
-                ];
-            }
+        } catch (\Exception $e) {
+            // API gagal/timeout, lanjut ke fallback di bawah
         }
 
-        usort($scoredProducts, fn ($a, $b) => $b['score'] <=> $a['score']);
-
-        return collect(array_slice($scoredProducts, 0, 4))->map(fn ($entry) => $entry['product']);
-    }
+        return Product::where('is_active', true)
+            ->latest()
+            ->take(4)
+            ->get();
+            }
 }

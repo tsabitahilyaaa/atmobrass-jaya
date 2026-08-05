@@ -47,7 +47,21 @@ model = None
 product_models = {}
 product_scalers = {}
 product_lookbacks = {}
+id_to_kategori = {}
+
 static_meta = {}
+
+# ===========================
+# CONTENT BASED FILTERING - pemetaan preferensi kebutuhan ke kategori produk asli
+# ===========================
+PREFERENCE_KATEGORI_MAP = {
+    "Pintu Rumah": ["Engsel", "Pemegang & Tombol"],
+    "Lemari & Kabinet": ["Pemegang & Tombol", "Roda & Kaki Perabot"],
+    "Furniture": ["Roda & Kaki Perabot", "Aksesori & Plat"],
+    "Kantor & Bangunan Komersial": ["Aksesori & Plat", "Engsel"],
+    "Dekorasi Interior": ["Aksesori & Plat", "Pemegang & Tombol"],
+    "Renovasi & Proyek Bangunan": ["Engsel", "Roda & Kaki Perabot"],
+}
 
 
 def get_model_related_paths():
@@ -88,6 +102,7 @@ def load_data_and_model():
     global pivot_sales, scaler_qty, kolom_produk, dict_nama_produk
     global static_features_dict, num_static_features, model
     global last_reload, data_mtime, model_mtime, default_lookback
+    global id_to_kategori
 
     print("[INFO] Memuat ulang dataset dan model...")
 
@@ -104,6 +119,7 @@ def load_data_and_model():
 
     kolom_produk = pivot_sales.columns.tolist()
     dict_nama_produk = df.drop_duplicates('ID_Produk').set_index('ID_Produk')['Nama_Produk'].to_dict()
+    id_to_kategori = df.drop_duplicates('ID_Produk').set_index('ID_Produk')['Kategori'].to_dict()
 
     static_meta_path = os.path.join(SCRIPT_DIR, 'static_meta.pkl')
     if os.path.exists(static_meta_path):
@@ -488,6 +504,71 @@ def recommend_by_name():
         sims = cosine_similarity(target_vec, features)[0]
         paired = list(zip(product_ids, sims))
         paired = [p for p in paired if p[0] != target_id]
+        paired.sort(key=lambda x: x[1], reverse=True)
+        topn = paired[:n]
+
+        results = []
+        for pid, score in topn:
+            results.append({
+                'id_produk': pid,
+                'nama_produk': dict_nama_produk.get(pid, ''),
+                'score': float(round(float(score), 4))
+            })
+
+        return jsonify({'status': 'success', 'data': results}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'pesan': str(e)}), 500
+
+
+@app.route('/api/recommend_by_preferences', methods=['GET'])
+def recommend_by_preferences():
+    try:
+        maybe_reload()
+
+        preference_param = request.args.get('preference', '').strip()
+        n = int(request.args.get('n', 4))
+
+        if not preference_param:
+            return jsonify({
+                'status': 'error',
+                'pesan': 'Parameter preference diperlukan.'
+            }), 400
+
+        # Boleh lebih dari satu preferensi, dipisah koma
+        preference_list = [p.strip() for p in preference_param.split(',') if p.strip()]
+
+        # Terjemahkan preferensi kebutuhan ke kategori produk asli
+        kategori_target = set()
+        for pref in preference_list:
+            kategori_target.update(PREFERENCE_KATEGORI_MAP.get(pref, []))
+
+        if not kategori_target:
+            return jsonify({
+                'status': 'error',
+                'pesan': 'Preferensi tidak dikenali.'
+            }), 400
+
+        product_ids = list(static_features_dict.keys())
+        features = np.vstack([static_features_dict[pid] for pid in product_ids])
+
+        # Hitung centroid vektor atribut PER KATEGORI target secara terpisah,
+        # lalu ambil skor similarity TERTINGGI antar centroid untuk tiap produk.
+        # (Menghindari kategori minoritas "kalah" akibat dirata-ratakan jadi satu vektor gabungan.)
+        max_scores = np.zeros(len(product_ids))
+        found_any_seed = False
+        for kat in kategori_target:
+            seed_ids_kat = [pid for pid, k in id_to_kategori.items() if k == kat and pid in static_features_dict]
+            if not seed_ids_kat:
+                continue
+            found_any_seed = True
+            centroid = np.vstack([static_features_dict[pid] for pid in seed_ids_kat]).mean(axis=0).reshape(1, -1)
+            sims = cosine_similarity(centroid, features)[0]
+            max_scores = np.maximum(max_scores, sims)
+
+        if not found_any_seed:
+            return jsonify({'status': 'error', 'pesan': 'Tidak ada produk yang cocok dengan preferensi tersebut.'}), 404
+
+        paired = list(zip(product_ids, max_scores))
         paired.sort(key=lambda x: x[1], reverse=True)
         topn = paired[:n]
 
